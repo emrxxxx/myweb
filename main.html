@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /* Mevcut stil bloğu değişmeden kalır */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #1e1e1e;
+            color: #dcddde;
+        }
+        .ai-chat-panel {
+            position: fixed;
+            top: 40px;
+            bottom: 40px;
+            left: 40px;
+            right: 40px;
+            background-color: #2c2f33;
+            border-radius: 6px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            display: flex; /* Changed to flex to be always visible */
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 9999;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 12px;
+            color: #dcddde;
+            resize: none;
+            box-sizing: border-box;
+            /* display: none; */ /* Removed */
+        }
+        /* Remove styles for the toggle button as it's gone */
+        .ai-chat-toggle-button, #showChatButton {
+             display: none !important;
+        }
+
+        #signInContainer, #sign-in-button, #status-message {
+            display: none;
+        }
+        .ai-chat-header {
+            padding: 5px 8px;
+            background-color: #23272a;
+            border-bottom: 1px solid #1e2124;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: auto;
+            min-height: 28px;
+            position: relative;
+            z-index: 1;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .ai-model-selector-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 1;
+            min-width: 0;
+        }
+        .ai-model-selector-container label {
+            font-size: 11px;
+            color: #b0b3b8;
+            flex-shrink: 0;
+        }
+        #modelSelector {
+            background-color: #40444b;
+            color: #dcddde;
+            border: 1px solid #1e2124;
+            border-radius: 3px;
+            padding: 1px 3px;
+            font-size: 10px;
+            max-width: 120px;
+            height: 20px;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23dcddde%22%20d%3D%22M287%2C114.7L159.1%2C21.2c-5.3-3.3-12.1-3.3-17.4%2C0L5.4%2C114.7c-5.3%2C3.3-5.3%2C8.4%2C0%2C11.7l141.6%2C93.5%20c5.3%2C3.3%2C12.1%2C3.3%2C17.4%2C0l141.6-93.5C292.3%2C123.1%2C292.3%2C118%2C287%2C114.7z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat; background-position: right 3px top 50%; background-size: 8px auto;
+            padding-right: 15px; width: auto; box-sizing: border-box;
+        }
+        .ai-clear-chat-button {
+            padding: 2px 6px; font-size: 10px; color: #dcddde; background-color: #40444b;
+            border: 1px solid #1e2124; border-radius: 3px; cursor: pointer; margin-right: auto;
+            transition: background-color 0.2s ease; flex-shrink: 0; box-sizing: border-box; height: 20px;
+        }
+        .ai-clear-chat-button:hover { background-color: #51565c; }
+        /* Remove styles for close button as it's gone */
+        .ai-chat-close, #closeButton {
+             display: none !important;
+        }
+
+        .ai-chat-messages {
+            flex: 1; padding: 10px; overflow-y: auto; background-color: #2c2f33;
+            scrollbar-width: thin; scrollbar-color: #4a4d53 #23272a;
+        }
+        .ai-chat-messages::-webkit-scrollbar { width: 5px; }
+        .ai-chat-messages::-webkit-scrollbar-track { background: #23272a; }
+        .ai-chat-messages::-webkit-scrollbar-thumb { background-color: #4a4d53; border-radius: 3px; }
+        .ai-chat-input-container { padding: 10px; border-top: 1px solid #1e2124; background-color: #23272a; }
+        .ai-chat-input {
+            width: 100%; background-color: #40444b; color: #dcddde; font-size: 12px;
+            border: 1px solid #1e2124; outline: none; padding: 6px 10px; border-radius: 5px;
+            box-sizing: border-box; resize: none; min-height: 30px; max-height: 150px; overflow-y: auto;
+            line-height: 1.5; scrollbar-width: thin; scrollbar-color: #4a4d53 #23272a;
+        }
+        .ai-chat-input::-webkit-scrollbar { width: 5px; }
+        .ai-chat-input::-webkit-scrollbar-track { background: #23272a; }
+        .ai-chat-input::-webkit-scrollbar-thumb { background-color: #4a4d53; border-radius: 3px; }
+
+        /* Message container for hover effects and buttons */
+        .ai-message-container {
+            position: relative;
+            margin-bottom: 10px; /* Add space between messages */
+            padding: 5px 0; /* Add padding for hover area */
+            border-radius: 4px;
+        }
+
+        .ai-chat-message {
+            padding: 3px 7px;
+            max-width: 100%;
+            color: #dcddde;
+            font-size: 12px;
+            line-height: 1.3;
+            overflow-wrap: break-word;
+            text-align: left;
+        }
+
+        .ai-user-message .ai-chat-message {
+             background-color: #2f3136;
+        }
+
+         .ai-ai-message .ai-chat-message {
+             background-color: #2f3136; /* Same background as user messages for consistency, adjust if needed */
+             text-align: left;
+         }
+
+
+        .ai-chat-message code {
+            background-color: #36393f; padding: 2px 4px; border-radius: 3px;
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; font-size: 11px;
+        }
+        .ai-chat-message pre {
+            position: relative;
+            background-color: #23272a;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 8px 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 300px;
+            max-width: 100%;
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: #4a4d53 #23272a;
+        }
+        .ai-chat-message pre::-webkit-scrollbar { width: 5px; }
+        .ai-chat-message pre::-webkit-scrollbar-track { background: #23272a; }
+        .ai-chat-message pre::-webkit-scrollbar-thumb { background-color: #4a4d53; border-radius: 3px; }
+        .ai-chat-message pre code { background-color: transparent; padding: 0; border-radius: 0; font-size: 12px; white-space: pre-wrap; word-wrap: break-word; }
+
+        /* Copy button specific styling */
+		.ai-copy-button {
+			position: sticky;
+			bottom: 5px;
+			right: 5px;
+			background-color: #40444b;
+			color: #dcddde;
+			border: none;
+			border-radius: 3px;
+			padding: 2px 6px;
+			cursor: pointer;
+			font-size: 9px;
+			opacity: 0;
+			transition: opacity 0.2s ease;
+			z-index: 10;
+			float: right;
+		}
+        .ai-chat-message pre:hover .ai-copy-button { opacity: 1; }
+        .ai-copy-button:hover { background-color: #51565c; }
+        .ai-copy-button.copied { background-color: #3d4da6; }
+
+
+        /* Action buttons for messages (Edit, Delete, Regenerate) */
+        .ai-message-actions {
+            display: flex;
+            justify-content: flex-end; /* Align buttons to the right */
+            gap: 5px;
+            margin-top: 5px;
+            padding: 0 7px; /* Align padding with message text */
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.2s ease;
+            font-size: 10px;
+        }
+
+        /* Show action buttons on hover of the message container */
+        .ai-message-container:hover .ai-message-actions {
+            opacity: 1;
+        }
+
+        .ai-action-button {
+            padding: 2px 6px;
+            font-size: 10px;
+            color: #b0b3b8; /* Muted color */
+            background-color: #36393f; /* Darker background */
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .ai-action-button:hover {
+            background-color: #40444b; /* Slightly lighter on hover */
+            color: #dcddde; /* Brighter text on hover */
+        }
+
+        .ai-action-button.delete:hover {
+             color: #f04747; /* Red for delete on hover */
+        }
+
+        .ai-action-button.edit {
+            /* Specific styles for edit button if needed */
+        }
+
+        .ai-action-button.regenerate {
+            /* Specific styles for regenerate button if needed */
+        }
+
+        /* Styling for message editing state */
+        .ai-message-editing textarea {
+            width: 100%;
+            background-color: #40444b;
+            color: #dcddde;
+            font-size: 12px;
+            border: 1px solid #1e2124;
+            outline: none;
+            padding: 6px 10px;
+            border-radius: 5px;
+            box-sizing: border-box;
+            resize: vertical; /* Allow vertical resize during edit */
+            min-height: 30px;
+            line-height: 1.5;
+            margin-bottom: 5px;
+        }
+
+
+        .ai-chat-message h1, .ai-chat-message h2, .ai-chat-message h3,
+        .ai-chat-message h4, .ai-chat-message h5, .ai-chat-message h6 {
+            margin-top: 1em; margin-bottom: 0.5em; font-weight: bold; line-height: 1.2;
+        }
+        .ai-chat-message h1 { font-size: 1.5em; border-bottom: 1px solid #4a4d53; padding-bottom: 0.3em; }
+        .ai-chat-message h2 { font-size: 1.3em; border-bottom: 1px solid #4a4d53; padding-bottom: 0.3em; }
+        .ai-chat-message h3 { font-size: 1.1em; } .ai-chat-message h4 { font-size: 1em; }
+        .ai-chat-message h5 { font-size: 0.9em; } .ai-chat-message h6 { font-size: 0.8em; color: #b0b3b8; }
+        .ai-chat-message blockquote { margin: 0 0 8px 10px; padding: 0 10px; border-left: 4px solid #5865f2; color: #b0b3b8; font-style: italic; }
+        .ai-chat-message ul, .ai-chat-message ol { padding-left: 20px; margin: 8px 0; }
+        .ai-chat-message li { margin-bottom: 4px; }
+        .ai-chat-message li:last-child { margin-bottom: 0; }
+        .ai-chat-message hr { border: none; border-top: 1px solid #4a4d53; margin: 16px 0; }
+        .ai-chat-message a { color: #5865f2; text-decoration: none; }
+        .ai-chat-message a:hover { text-decoration: underline; }
+        .ai-resize-handle {
+            position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; /* Changed position */
+            background-color: transparent; cursor: nwse-resize; z-index: 10000;
+        }
+        .ai-temporary-loading { opacity: 0.8; }
+        .ai-chat-loading { display: inline-block; margin-left: 4px; }
+        .ai-chat-loading-dot {
+            display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+            background-color: #dcddde; margin-right: 2px; animation: ai-chat-loading 1.4s infinite ease-in-out both;
+        }
+        .ai-chat-loading-dot:nth-child(1) { animation-delay: -0.32s; }
+        .ai-chat-loading-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes ai-chat-loading {
+            0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="ai-chat-panel" id="chatPanel">
+         <div class="ai-resize-handle" id="resizeHandle"></div>
+        <p id="status-message"></p>
+        <div class="ai-chat-header">
+            <div class="ai-model-selector-container">
+                <label for="modelSelector">Model:</label>
+                <select id="modelSelector"></select>
+            </div>
+            <button class="ai-clear-chat-button" id="clearChatButton" aria-label="Clear chat history">Clear Chat</button>
+             </div>
+        <div class="ai-chat-messages" id="chatMessages"></div>
+        <div class="ai-chat-input-container">
+            <textarea class="ai-chat-input" id="chatInput" placeholder="Type a message..." rows="1"></textarea>
+        </div>
+    </div>
+     <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            const chatPanel = document.getElementById('chatPanel');
+            const chatInput = document.getElementById('chatInput');
+            const chatMessages = document.getElementById('chatMessages');
+            const resizeHandle = document.getElementById('resizeHandle');
+            const modelSelector = document.getElementById('modelSelector');
+            const clearChatButton = document.getElementById('clearChatButton');
+
+            const models = [
+                'mistral-large-latest', 'mistral-medium-latest', 'mistral-small-latest',
+                'codestral-latest', 'pixtral-large-latest'
+            ];
+            let conversationHistory = [];
+            const STORAGE_KEY = 'aiChatHistory';
+            const MISTRAL_API_KEY = 'XlU2AOg8TPrxALMZ8yBz9Xey5Y0wgjX4'; // Replace with your actual API Key or handle securely
+            const MISTRAL_API_URL = 'https://api.mistral.ai/v1/chat/completions';
+
+            let isGenerating = false; // Flag to prevent sending new messages while generating
+
+            function saveHistory() {
+                try {
+                    const historyToSave = conversationHistory.map(msg => ({
+                        role: msg.role,
+                        rawText: msg.rawText
+                    }));
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(historyToSave));
+                } catch (e) {
+                    console.error("Failed to save history to localStorage:", e);
+                }
+            }
+
+            // Ensures data-message-index attributes and action buttons are correct after history changes
+            function reIndexMessages() {
+                 const messageContainers = chatMessages.querySelectorAll('.ai-message-container');
+                 messageContainers.forEach((container, index) => {
+                     container.dataset.messageIndex = index;
+                     const role = conversationHistory[index]?.role;
+                     if (role) {
+                         // Re-add action buttons with the correct index
+                         addMessageActionButtons(container, role, index);
+                     } else {
+                          // If history somehow doesn't match, remove buttons
+                          const existingActions = container.querySelector('.ai-message-actions');
+                          if (existingActions) {
+                              existingActions.remove();
+                          }
+                     }
+                 });
+             }
+
+
+            function loadHistory() {
+                try {
+                    const history = localStorage.getItem(STORAGE_KEY);
+                    if (history) {
+                        const loadedHistory = JSON.parse(history);
+                        conversationHistory = loadedHistory.map(msg => ({
+                            role: msg.role,
+                            rawText: msg.rawText
+                        }));
+                        // Render messages after loading
+                        conversationHistory.forEach((msg, index) => {
+                            const messageContainer = addMessageContainer(msg.role === 'user' ? 'ai-user-message' : 'ai-ai-message');
+                            addMessageContent(messageContainer, msg.rawText, msg.role);
+                            // Action buttons will be added by reIndexMessages later
+                        });
+                        reIndexMessages(); // Ensure indices and buttons are correct after loading
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    } else {
+                        conversationHistory = [];
+                    }
+                } catch (e) {
+                    console.error("Failed to load history from localStorage:", e);
+                    conversationHistory = []; // Clear history in case of load error
+                    chatMessages.innerHTML = ''; // Clear display
+                }
+                adjustInputHeight();
+            }
+
+            function clearChatHistoryAndDisplay() {
+                try {
+                    localStorage.removeItem(STORAGE_KEY);
+                    console.log("Chat history cleared from localStorage.");
+                } catch (e) {
+                    console.error("Failed to clear history from localStorage:", e);
+                }
+                conversationHistory = [];
+                console.log("In-memory conversation history cleared.");
+                chatMessages.innerHTML = '';
+                console.log("Chat display cleared.");
+                // Optionally add a welcome message
+                // addMessageContainer('ai-ai-message').innerHTML = '<div class="ai-chat-message">Merhaba! Nasıl yardımcı olabilirim?</div>';
+                adjustInputHeight();
+            }
+
+            // Helper to add the outer container for message and buttons
+            // Index is no longer passed here, assigned by reIndexMessages
+            function addMessageContainer(className) {
+                 const messageContainer = document.createElement('div');
+                 messageContainer.classList.add('ai-message-container', className);
+                 // data-message-index will be set by reIndexMessages
+                 chatMessages.appendChild(messageContainer);
+                 return messageContainer;
+            }
+
+             // Helper to add the message content div and render markdown
+            function addMessageContent(containerElement, rawText, role, isStreaming = false) {
+                // Remove existing content element if regenerating/editing
+                 const existingContent = containerElement.querySelector('.ai-chat-message');
+                 if(existingContent) {
+                     existingContent.remove();
+                 }
+
+                const messageElement = document.createElement('div');
+                messageElement.classList.add('ai-chat-message');
+                containerElement.appendChild(messageElement);
+
+                if (!isStreaming) {
+                     updateMessageContent(messageElement, rawText, role);
+                }
+                return messageElement; // Return the content element
+            }
+
+            // Helper to add action buttons based on message role
+            // Index is passed but primarily for internal button logic if needed,
+            // the source of truth for index is data-message-index updated by reIndexMessages
+            function addMessageActionButtons(containerElement, role, index) {
+                // Remove any existing action buttons before adding new ones
+                const existingActions = containerElement.querySelector('.ai-message-actions');
+                if (existingActions) {
+                    existingActions.remove();
+                }
+
+                const actionsDiv = document.createElement('div');
+                actionsDiv.classList.add('ai-message-actions');
+                actionsDiv.dataset.messageIndex = index; // Store index on buttons container
+
+                if (role === 'user') {
+                    const editButton = document.createElement('button');
+                    editButton.classList.add('ai-action-button', 'edit');
+                    editButton.textContent = 'Düzenle';
+                    actionsDiv.appendChild(editButton);
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('ai-action-button', 'delete');
+                    deleteButton.textContent = 'Sil';
+                    actionsDiv.appendChild(deleteButton);
+                } else { // role === 'assistant'
+                     const regenerateButton = document.createElement('button');
+                     regenerateButton.classList.add('ai-action-button', 'regenerate');
+                     regenerateButton.textContent = 'Yeni Yanıt Oluştur';
+                     actionsDiv.appendChild(regenerateButton);
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('ai-action-button', 'delete');
+                    deleteButton.textContent = 'Sil';
+                    actionsDiv.appendChild(deleteButton);
+                }
+                containerElement.appendChild(actionsDiv);
+            }
+
+            function updateMessageContent(messageElement, markdownText, role = 'assistant') {
+                 messageElement.innerHTML = marked.parse(markdownText);
+
+                 if (role === 'assistant') {
+                     // Add copy buttons only to code blocks in AI messages
+                     messageElement.querySelectorAll('pre code').forEach((block) => {
+                        hljs.highlightElement(block);
+                        const preElement = block.parentElement;
+                        // Check if a copy button already exists before adding
+                        if (!preElement.querySelector('.ai-copy-button')) {
+                            const copyButton = document.createElement('button');
+                            copyButton.classList.add('ai-copy-button');
+                            copyButton.textContent = 'Copy';
+                            copyButton.addEventListener('click', async () => {
+                                try {
+                                    const codeText = block.textContent;
+                                    await navigator.clipboard.writeText(codeText);
+                                    copyButton.textContent = 'Copied!';
+                                    copyButton.classList.add('copied');
+                                    setTimeout(() => {
+                                        copyButton.textContent = 'Copy';
+                                        copyButton.classList.remove('copied');
+                                    }, 2000);
+                                } catch (err) {
+                                    console.error('Failed to copy text:', err);
+                                    copyButton.textContent = 'Error';
+                                    setTimeout(() => {
+                                        copyButton.textContent = 'Copy';
+                                    }, 2000);
+                                }
+                            });
+                            preElement.appendChild(copyButton);
+                        }
+                    });
+                 }
+            }
+
+            // Function to remove messages from a given index onwards (inclusive)
+            // This function ONLY removes from DOM and history. reIndexMessages must be called after.
+            function removeMessagesFromIndex(startIndex) {
+                const messagesInDom = chatMessages.querySelectorAll('.ai-message-container');
+                for (let i = startIndex; i < messagesInDom.length; i++) {
+                    messagesInDom[i].remove();
+                }
+                conversationHistory = conversationHistory.slice(0, startIndex);
+                 // Do NOT save or re-index here. Call these after the operation that uses this function.
+            }
+
+             // Function to get the index of a message container element from its data attribute
+             function getMessageIndexFromElement(element) {
+                 let parent = element;
+                 while (parent && !parent.classList.contains('ai-message-container')) {
+                     parent = parent.parentElement;
+                 }
+                 if (parent && parent.dataset.messageIndex) {
+                     return parseInt(parent.dataset.messageIndex, 10);
+                 }
+                 return -1; // Not found or index not set
+             }
+
+            async function sendMessage(messageText, selectedModel) {
+                if (isGenerating) return;
+
+                isGenerating = true;
+                chatInput.disabled = true;
+
+                // Add user message container and content
+                const userMessageContainer = addMessageContainer('ai-user-message');
+                const userMessageContent = addMessageContent(userMessageContainer, messageText, 'user');
+                // Action buttons will be added by reIndexMessages later
+
+                conversationHistory.push({ role: 'user', rawText: messageText });
+                // saveHistory() and reIndexMessages() will be called after AI response
+
+                chatInput.value = '';
+                adjustInputHeight();
+
+                // Add AI message container and loading indicator
+                const aiMessageContainer = addMessageContainer('ai-ai-message');
+                 const aiMessageContent = addMessageContent(aiMessageContainer, '', 'assistant', true); // Streaming
+                aiMessageContent.innerHTML = `<div class="ai-chat-loading"><div class="ai-chat-loading-dot"></div><div class="ai-chat-loading-dot"></div><div class="ai-chat-loading-dot"></div></div> Thinking with ${selectedModel}...`;
+                aiMessageContainer.classList.add('ai-temporary-loading');
+
+                reIndexMessages(); // Re-index after adding user and AI containers
+
+                const wasAtBottom = isAtBottom(); // Check scroll position before generation
+
+                let aiResponseText = '';
+                let firstChunkReceived = false;
+
+                try {
+                    const messagesForAPI = conversationHistory.map(msg => ({
+                        role: msg.role,
+                        content: msg.rawText
+                    }));
+
+                    const response = await fetch(MISTRAL_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'Authorization': `Bearer ${MISTRAL_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            model: selectedModel,
+                            messages: messagesForAPI,
+                            stream: true,
+                            max_tokens: 18432
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorData.message || JSON.stringify(errorData)}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop();
+
+                        for (const line of lines) {
+                            if (line.startsWith('data:')) {
+                                const data = line.substring(5).trim();
+                                if (data === '[DONE]') break;
+                                try {
+                                    const json = JSON.parse(data);
+                                    const chunk = json.choices[0]?.delta?.content || '';
+                                    aiResponseText += chunk;
+                                    if (!firstChunkReceived && aiResponseText.length > 0) {
+                                        aiMessageContent.innerHTML = ''; // Clear loading indicator
+                                        aiMessageContainer.classList.remove('ai-temporary-loading');
+                                        firstChunkReceived = true;
+                                    }
+                                    updateMessageContent(aiMessageContent, aiResponseText, 'assistant');
+                                    if (wasAtBottom) { // Only auto-scroll if user was at the bottom
+                                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                                    }
+                                } catch (e) {
+                                    console.error("Error parsing JSON chunk:", e, "Chunk:", data);
+                                }
+                            }
+                        }
+                    }
+
+                    // Process any remaining buffer content
+                     if (buffer.startsWith('data:')) {
+                         const data = buffer.substring(5).trim();
+                         if (data !== '[DONE]') {
+                             try {
+                                 const json = JSON.parse(data);
+                                 const chunk = json.choices[0]?.delta?.content || '';
+                                 aiResponseText += chunk;
+                                 if (!firstChunkReceived && aiResponseText.length > 0) {
+                                     aiMessageContent.innerHTML = ''; // Clear loading indicator
+                                     aiMessageContainer.classList.remove('ai-temporary-loading');
+                                     firstChunkReceived = true;
+                                 }
+                                 updateMessageContent(aiMessageContent, aiResponseText, 'assistant');
+                                  if (wasAtBottom) { // Only auto-scroll if user was at the bottom
+                                     chatMessages.scrollTop = chatMessages.scrollHeight;
+                                 }
+                             } catch (e) {
+                                 console.error("Error parsing final JSON chunk:", e, "Chunk:", data);
+                             }
+                         }
+                     }
+
+                    // Final update and add to history
+                    updateMessageContent(aiMessageContent, aiResponseText, 'assistant');
+                    conversationHistory.push({ role: 'assistant', rawText: aiResponseText });
+
+                } catch (error) {
+                    console.error('Error fetching from Mistral API:', error);
+                    aiMessageContainer.classList.remove('ai-temporary-loading');
+                    aiMessageContent.innerHTML = `Error: ${error.message}`;
+                    aiMessageContent.style.color = 'red';
+                     // Keep the error message in history? Or remove the AI message?
+                     // Let's remove the incomplete/error AI message from history for now.
+                     conversationHistory = conversationHistory.filter(msg => msg.rawText !== aiResponseText); // Simple removal by text, might need better identifier
+                } finally {
+                    saveHistory(); // Save history after attempt
+                    reIndexMessages(); // Re-index all messages to fix indices and buttons
+                    if (wasAtBottom) { // Ensure scroll to bottom after completion/error
+                         chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                    isGenerating = false;
+                    chatInput.disabled = false;
+                    chatInput.focus();
+                }
+            }
+
+
+            function adjustInputHeight() {
+                chatInput.style.height = 'auto';
+                chatInput.style.height = chatInput.scrollHeight + 'px';
+            }
+
+            function populateModelSelector() {
+                modelSelector.innerHTML = '';
+                models.forEach(modelName => {
+                    const option = document.createElement('option');
+                    option.value = modelName;
+                    option.textContent = modelName;
+                    modelSelector.appendChild(option);
+                });
+                const defaultModel = 'codestral-latest';
+                modelSelector.value = models.includes(defaultModel) ? defaultModel : models[0] || '';
+            }
+
+            function isAtBottom() {
+                // Allow a small tolerance
+                return chatMessages.scrollHeight - chatMessages.scrollTop <= chatMessages.clientHeight + 5;
+            }
+
+            // --- Event Listeners ---
+
+            // Resize handle
+            let isResizing = false;
+            let initialX, initialY, initialWidth, initialHeight;
+            const minWidth = 320;
+            const minHeight = 380;
+
+            resizeHandle.addEventListener('mousedown', function(e) {
+                isResizing = true;
+                initialX = e.clientX;
+                initialY = e.clientY;
+                initialWidth = chatPanel.offsetWidth;
+                initialHeight = chatPanel.offsetHeight;
+                document.body.style.userSelect = 'none';
+                document.body.style.cursor = 'nwse-resize';
+            });
+
+            document.addEventListener('mousemove', function(e) {
+                if (!isResizing) return;
+                const dx = e.clientX - initialX;
+                const dy = e.clientY - initialY;
+                // Calculate new dimensions relative to the bottom-right corner
+                let newWidth = initialWidth + dx;
+                let newHeight = initialHeight + dy;
+
+                // Get panel's current position
+                const panelRect = chatPanel.getBoundingClientRect();
+                const panelLeft = panelRect.left;
+                const panelTop = panelRect.top;
+
+                // Ensure panel doesn't go off screen or below min size
+                 const maxWidth = window.innerWidth - panelLeft - 10; // 10px padding on right
+                 const maxHeight = window.innerHeight - panelTop - 10; // 10px padding on bottom
+
+
+                if (newWidth < minWidth) newWidth = minWidth;
+                if (newHeight < minHeight) newHeight = minHeight;
+
+                if (newWidth > maxWidth) newWidth = maxWidth;
+                if (newHeight > maxHeight) newHeight = maxHeight;
+
+
+                chatPanel.style.width = newWidth + 'px';
+                chatPanel.style.height = newHeight + 'px';
+                adjustInputHeight();
+            });
+
+            document.addEventListener('mouseup', function() {
+                if (isResizing) {
+                    isResizing = false;
+                    document.body.style.userSelect = '';
+                    document.body.style.cursor = '';
+                    adjustInputHeight();
+                }
+            });
+
+
+            // Input area height adjustment
+            chatInput.addEventListener('input', adjustInputHeight);
+
+            // Send message on Enter (without Shift)
+            chatInput.addEventListener('keypress', async function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    const messageText = chatInput.value.trim();
+                    const selectedModel = modelSelector.value;
+
+                    if (messageText !== '' && !isGenerating) {
+                        await sendMessage(messageText, selectedModel);
+                    }
+                }
+            });
+
+            // Clear chat button
+            clearChatButton.addEventListener('click', clearChatHistoryAndDisplay);
+
+            // --- Message Action Button Handling (using Event Delegation) ---
+            chatMessages.addEventListener('click', async function(e) {
+                const targetButton = e.target.closest('.ai-action-button');
+                if (!targetButton || isGenerating) return; // Not a button or currently generating
+
+                const messageContainer = targetButton.closest('.ai-message-container');
+                if (!messageContainer) return; // Not inside a message container
+
+                const messageIndex = getMessageIndexFromElement(messageContainer);
+                if (messageIndex === -1 || messageIndex >= conversationHistory.length) {
+                    console.error("Could not determine message index or index out of bounds.");
+                    return;
+                }
+
+                const message = conversationHistory[messageIndex];
+                const selectedModel = modelSelector.value;
+
+                if (targetButton.classList.contains('delete')) {
+                    // Delete the message and all subsequent messages
+                    removeMessagesFromIndex(messageIndex);
+                    saveHistory(); // Save after deletion
+                    reIndexMessages(); // Re-index remaining messages
+                } else if (message.role === 'user' && targetButton.classList.contains('edit')) {
+                    // Edit user message
+                     if (isGenerating) return;
+
+                    // Find the user message content element
+                    const messageContentElement = messageContainer.querySelector('.ai-chat-message');
+                    if (!messageContentElement) return;
+
+                     // Store original content and replace with textarea
+                     const originalText = message.rawText;
+                     messageContainer.classList.add('ai-message-editing');
+                     messageContentElement.innerHTML = `<textarea class="ai-edit-textarea">${originalText}</textarea>`;
+
+                     // Hide action buttons, add Save and Cancel
+                     const actionsDiv = messageContainer.querySelector('.ai-message-actions');
+                     actionsDiv.style.display = 'none';
+
+                     const editActionsDiv = document.createElement('div');
+                     editActionsDiv.classList.add('ai-message-actions'); // Reuse styling
+                     editActionsDiv.style.display = 'flex'; // Make visible
+                     messageContainer.appendChild(editActionsDiv);
+
+
+                     const saveButton = document.createElement('button');
+                     saveButton.classList.add('ai-action-button', 'save');
+                     saveButton.textContent = 'Kaydet';
+                     editActionsDiv.appendChild(saveButton);
+
+                     const cancelButton = document.createElement('button');
+                     cancelButton.classList.add('ai-action-button', 'cancel');
+                     cancelButton.textContent = 'İptal';
+                     editActionsDiv.appendChild(cancelButton);
+
+
+                     const editArea = messageContentElement.querySelector('.ai-edit-textarea');
+                     // Adjust textarea height initially
+                     editArea.style.height = 'auto';
+                     editArea.style.height = editArea.scrollHeight + 'px';
+
+                     // Event listener for textarea input to adjust height
+                     const editInputHandler = () => {
+                          editArea.style.height = 'auto';
+                          editArea.style.height = editArea.scrollHeight + 'px';
+                     };
+                     editArea.addEventListener('input', editInputHandler);
+
+                    // Save button logic
+                    saveButton.addEventListener('click', async () => {
+                        const newText = editArea.value.trim();
+                         // Remove the input handler
+                        editArea.removeEventListener('input', editInputHandler);
+
+                        // Clean up edit UI
+                        messageContainer.classList.remove('ai-message-editing');
+                        editActionsDiv.remove(); // Remove save/cancel buttons
+
+
+                        if (newText === originalText || newText === '') {
+                             // If text didn't change or is empty, just revert UI
+                             updateMessageContent(messageContentElement, originalText, 'user');
+                             actionsDiv.style.display = ''; // Show original actions div
+                             reIndexMessages(); // Ensure buttons on this message are correct
+                             return;
+                        }
+
+                        // Update message in history and DOM
+                        conversationHistory[messageIndex].rawText = newText;
+                        updateMessageContent(messageContentElement, newText, 'user');
+
+                        // Remove all subsequent messages from history and DOM
+                        removeMessagesFromIndex(messageIndex + 1);
+                        reIndexMessages(); // Re-index up to the edited message
+
+                         // Now send the updated user message to get a new AI response
+                         // This will add a *new* AI message container and its content
+                         await regenerateAiResponse(messageIndex, selectedModel); // Use the new regeneration logic
+                    }, { once: true }); // Use { once: true } for automatic removal
+
+                    // Cancel button logic
+                    cancelButton.addEventListener('click', () => {
+                        // Remove the input handler
+                        editArea.removeEventListener('input', editInputHandler);
+
+                        // Revert UI
+                        messageContainer.classList.remove('ai-message-editing');
+                        updateMessageContent(messageContentElement, originalText, 'user');
+                        editActionsDiv.remove(); // Remove save/cancel buttons
+                        actionsDiv.style.display = ''; // Show original actions div
+                         reIndexMessages(); // Ensure buttons on this message are correct
+
+                    }, { once: true });
+
+                     // Focus the textarea immediately
+                    setTimeout(() => editArea.focus(), 0);
+
+
+                } else if (message.role === 'assistant' && targetButton.classList.contains('regenerate')) {
+                    // Regenerate AI message - MODIFIED LOGIC
+                    await regenerateAiResponse(messageIndex - 1, selectedModel); // Regenerate from the user message before this AI one
+                }
+            });
+
+            // --- New Regeneration Logic ---
+            async function regenerateAiResponse(userMessageIndex, selectedModel) {
+                if (isGenerating) return;
+
+                // Validate the user message index
+                if (userMessageIndex < 0 || userMessageIndex >= conversationHistory.length || conversationHistory[userMessageIndex].role !== 'user') {
+                    console.warn("Invalid user message index for regeneration.");
+                    return;
+                }
+
+                isGenerating = true;
+                chatInput.disabled = true;
+
+                // Get the user message container element
+                const userMessageContainer = chatMessages.querySelector(`.ai-message-container[data-message-index="${userMessageIndex}"]`);
+                if (!userMessageContainer) {
+                    console.error("Could not find user message container for regeneration.");
+                     isGenerating = false;
+                     chatInput.disabled = false;
+                    return;
+                }
+
+                // Remove the AI message(s) that came after the user message
+                removeMessagesFromIndex(userMessageIndex + 1);
+                reIndexMessages(); // Re-index remaining messages
+
+                // Add a NEW AI message container with loading indicator immediately after the user message
+                const aiMessageContainer = addMessageContainer('ai-ai-message');
+                // Insert it right after the user message container in the DOM
+                userMessageContainer.after(aiMessageContainer);
+
+                const aiMessageContent = addMessageContent(aiMessageContainer, '', 'assistant', true); // Streaming
+                aiMessageContent.innerHTML = `<div class="ai-chat-loading"><div class="ai-chat-loading-dot"></div><div class="ai-chat-loading-dot"></div><div class="ai-chat-loading-dot"></div></div> Thinking with ${selectedModel}...`;
+                aiMessageContainer.classList.add('ai-temporary-loading');
+
+                 reIndexMessages(); // Re-index *all* messages including the newly added placeholder
+
+                const wasAtBottom = isAtBottom(); // Check scroll position
+
+                let aiResponseText = '';
+                let firstChunkReceived = false;
+
+                try {
+                    // Create API messages from history up to and including the target user message
+                    const messagesForAPI = conversationHistory.slice(0, userMessageIndex + 1).map(msg => ({
+                        role: msg.role,
+                        content: msg.rawText
+                    }));
+
+                    const response = await fetch(MISTRAL_API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'Authorization': `Bearer ${MISTRAL_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            model: selectedModel,
+                            messages: messagesForAPI,
+                            stream: true,
+                            max_tokens: 18432 // Max tokens for response
+                        })
+                    });
+
+                     if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(`API Error: ${response.status} ${response.statusText} - ${errorData.message || JSON.stringify(errorData)}`);
+                    }
+
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, { stream: true });
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop();
+
+                        for (const line of lines) {
+                            if (line.startsWith('data:')) {
+                                const data = line.substring(5).trim();
+                                if (data === '[DONE]') break;
+                                try {
+                                    const json = JSON.parse(data);
+                                    const chunk = json.choices[0]?.delta?.content || '';
+                                    aiResponseText += chunk;
+                                    if (!firstChunkReceived && aiResponseText.length > 0) {
+                                        aiMessageContent.innerHTML = ''; // Clear loading indicator
+                                        aiMessageContainer.classList.remove('ai-temporary-loading');
+                                        firstChunkReceived = true;
+                                    }
+                                    updateMessageContent(aiMessageContent, aiResponseText, 'assistant');
+                                    if (wasAtBottom) {
+                                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                                    }
+                                } catch (e) {
+                                    console.error("Error parsing JSON chunk:", e, "Chunk:", data);
+                                }
+                            }
+                        }
+                    }
+                     // Process any remaining buffer content
+                     if (buffer.startsWith('data:')) {
+                         const data = buffer.substring(5).trim();
+                         if (data !== '[DONE]') {
+                             try {
+                                 const json = JSON.parse(data);
+                                 const chunk = json.choices[0]?.delta?.content || '';
+                                 aiResponseText += chunk;
+                                 if (!firstChunkReceived && aiResponseText.length > 0) {
+                                     aiMessageContent.innerHTML = ''; // Clear loading indicator
+                                     aiMessageContainer.classList.remove('ai-temporary-loading');
+                                     firstChunkReceived = true;
+                                 }
+                                 updateMessageContent(aiMessageContent, aiResponseText, 'assistant');
+                                  if (wasAtBottom) {
+                                     chatMessages.scrollTop = chatMessages.scrollHeight;
+                                 }
+                             } catch (e) {
+                                 console.error("Error parsing final JSON chunk:", e, "Chunk:", data);
+                             }
+                         }
+                     }
+
+
+                    // Add the completed AI response to the conversation history
+                    conversationHistory.push({ role: 'assistant', rawText: aiResponseText });
+
+                } catch (error) {
+                    console.error('Error fetching from Mistral API during regeneration:', error);
+                    aiMessageContainer.classList.remove('ai-temporary-loading');
+                    aiMessageContent.innerHTML = `Error: ${error.message}`;
+                    aiMessageContent.style.color = 'red';
+                    // If error, remove the added AI message placeholder
+                    aiMessageContainer.remove();
+                    // No need to add to history if there was an error and removed
+                } finally {
+                    saveHistory(); // Save history after regeneration attempt
+                    reIndexMessages(); // Re-index *all* messages again
+                    if (wasAtBottom) {
+                         chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                    isGenerating = false;
+                    chatInput.disabled = false;
+                    chatInput.focus();
+                }
+            }
+            // --- End New Regeneration Logic ---
+
+
+            // Initial setup
+            populateModelSelector();
+            loadHistory();
+            // Chat panel is always visible, no need to toggle
+             chatPanel.style.display = 'flex';
+             chatInput.focus(); // Focus the input when the page loads
+        });
+    </script>
+</body>
+</html>
