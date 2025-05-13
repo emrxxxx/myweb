@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -26,19 +27,18 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.4);
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Keep hidden for absolute header */
+            overflow: hidden;
             z-index: 9999;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             font-size: 12px;
             color: #dcddde;
-            /* resize: both; Removed */
             box-sizing: border-box;
             min-width: 320px;
             min-height: 380px;
-            padding-top: 45px; /* Reserve space for absolute header */
+            padding-top: 45px;
+            isolation: isolate;
         }
         .ai-chat-header {
-            position: absolute; /* Position over content */
+            position: absolute;
             top: 0;
             left: 0;
             right: 0;
@@ -47,29 +47,29 @@
             border-bottom: 1px solid #1e2124;
             display: flex;
             align-items: center;
-            justify-content: space-between; /* Space out controls and actions */
-            height: 38px; /* Fixed height */
+            justify-content: space-between;
+            height: 38px;
             box-sizing: border-box;
             z-index: 1;
             gap: 8px;
-            opacity: 0; /* Hidden by default */
+            opacity: 0;
             transition: opacity 0.3s ease-in-out;
         }
         .ai-chat-panel:hover .ai-chat-header {
-            opacity: 1; /* Show on panel hover */
+            opacity: 1;
         }
         .ai-header-controls {
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-grow: 1; /* Take available space */
-            min-width: 0; /* Allow shrinking */
+            flex-grow: 1;
+            min-width: 0;
         }
         .ai-header-actions {
             display: flex;
             align-items: center;
             gap: 8px;
-            flex-shrink: 0; /* Prevent actions from shrinking */
+            flex-shrink: 0;
         }
         .ai-header-button {
             background: none;
@@ -99,32 +99,31 @@
             padding: 4px 8px;
             font-size: 11px;
             outline: none;
-            height: 28px; /* Match height */
+            height: 28px;
             box-sizing: border-box;
             line-height: 1.4;
         }
         .ai-model-select {
-             min-width: 120px;
-             flex-shrink: 0; /* Prevent select from shrinking too much */
+            min-width: 120px;
+            flex-shrink: 0;
         }
         .ai-system-prompt {
-            flex-grow: 1; /* Take remaining space in controls */
-            min-width: 100px; /* Min width for textarea */
+            flex-grow: 1;
+            min-width: 100px;
             resize: none;
-            overflow-y: hidden; /* Hide scrollbar for single line */
-            white-space: nowrap; /* Keep text on one line */
-            text-overflow: ellipsis; /* Show ... if text overflows */
+            overflow-y: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
         }
         .ai-chat-messages {
             flex: 1;
             padding: 15px;
-            /* Removed padding-top, handled by panel padding */
             overflow-y: auto;
             background-color: #2c2f33;
             scrollbar-width: thin;
             scrollbar-color: #4a4d53 #23272a;
             word-break: break-word;
-            /* Position relative needed if header was inside this */
+            contain: content;
         }
         .ai-chat-messages::-webkit-scrollbar {
             width: 6px;
@@ -164,8 +163,8 @@
             transition: border-color 0.2s ease;
         }
         .ai-chat-input:focus {
-             border-color: #4f545c;
-             box-shadow: none;
+            border-color: #4f545c;
+            box-shadow: none;
         }
         .ai-chat-input::-webkit-scrollbar {
             width: 5px;
@@ -177,7 +176,7 @@
             background-color: #4a4d53;
             border-radius: 3px;
         }
-        .ai-send-button, .ai-stop-button { /* Combine common styles */
+        .ai-send-button, .ai-stop-button {
             background-color: #36393f;
             color: #dcddde;
             border: 1px solid #36393f;
@@ -195,10 +194,10 @@
             background-color: #40444b;
             border-color: #4f545c;
         }
-        .ai-send-button svg, .ai-stop-button svg { /* Combine common styles */
+        .ai-send-button svg, .ai-stop-button svg {
             width: 20px;
             height: 20px;
-            fill: #b0b3b8; /* Default icon color */
+            fill: #b0b3b8;
             transition: fill 0.2s ease;
         }
         .ai-send-button:hover:not(:disabled) svg, .ai-stop-button:hover svg {
@@ -213,18 +212,17 @@
             fill: #72767d;
         }
         .ai-stop-button {
-            background-color: #f04747; /* Specific stop button color */
+            background-color: #f04747;
             border-color: #f04747;
-            display: none; /* Hidden by default */
+            display: none;
         }
         .ai-stop-button:hover {
             background-color: #d63939;
-             border-color: #d63939;
+            border-color: #d63939;
         }
         .ai-stop-button svg {
-             fill: #dcddde; /* Stop icon is white */
+            fill: #dcddde;
         }
-
         .ai-message-container {
             position: relative;
             margin-bottom: 30px;
@@ -240,6 +238,11 @@
             overflow-wrap: break-word;
             word-break: break-word;
             text-align: left;
+            all: initial;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 13px;
+            color: #dcddde;
+            line-height: 1.4;
         }
         .ai-user-message, .ai-ai-message {
             margin: 0 auto;
@@ -256,19 +259,19 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
             width: 100%;
             box-sizing: border-box;
-            position: relative; /* Needed for streaming cursor */
+            position: relative;
         }
         .ai-ai-message .ai-chat-message {
             background-color: #2f3136;
         }
         .ai-streaming-cursor::after {
-             content: '▋';
-             display: inline-block;
-             animation: ai-blink 1s step-end infinite;
-             margin-left: 2px;
-             vertical-align: baseline;
-             color: #dcddde; /* Cursor color */
-             opacity: 1;
+            content: '▋';
+            display: inline-block;
+            animation: ai-blink 1s step-end infinite;
+            margin-left: 2px;
+            vertical-align: baseline;
+            color: #dcddde;
+            opacity: 1;
         }
         @keyframes ai-blink {
             0%, 100% { opacity: 1; }
@@ -288,7 +291,6 @@
             border: 1px solid #1a1c1e;
             border-radius: 5px;
             padding: 8px;
-            padding-bottom: 8px;
             margin: 10px 0;
             white-space: pre-wrap;
             word-wrap: break-word;
@@ -362,7 +364,7 @@
             z-index: 5;
         }
         .ai-message-container:hover .ai-message-actions,
-        .ai-message-container.ai-force-show-actions .ai-message-actions { /* Keep actions visible during streaming */
+        .ai-message-container.ai-force-show-actions .ai-message-actions {
             opacity: 1;
         }
         .ai-action-button {
@@ -403,8 +405,10 @@
             box-sizing: border-box;
             resize: vertical;
             min-height: 35px;
+            max-height: 400px;
             line-height: 1.4;
             margin-bottom: 8px;
+            overflow-y: auto;
         }
         .ai-chat-message h1, .ai-chat-message h2, .ai-chat-message h3,
         .ai-chat-message h4, .ai-chat-message h5, .ai-chat-message h6 {
@@ -447,12 +451,12 @@
             font-style: normal;
             border-radius: 0 4px 4px 0;
         }
-         .ai-chat-message blockquote p:first-child {
-             margin-top: 0;
-         }
-         .ai-chat-message blockquote p:last-child {
-             margin-bottom: 0;
-         }
+        .ai-chat-message blockquote p:first-child {
+            margin-top: 0;
+        }
+        .ai-chat-message blockquote p:last-child {
+            margin-bottom: 0;
+        }
         .ai-chat-message ul, .ai-chat-message ol {
             padding-left: 25px;
             margin: 10px 0;
@@ -476,8 +480,7 @@
         .ai-chat-message a:hover {
             text-decoration: underline;
         }
-        /* Removed .ai-resize-handle CSS */
-        .ai-chat-loading { /* Existing loading dots for regenerate */
+        .ai-chat-loading {
             display: inline-block;
             margin-left: 4px;
         }
@@ -504,36 +507,32 @@
                 transform: scale(1);
             }
         }
-        /* New CSS for color preview span */
         .ai-color-preview {
             display: inline-block;
-            padding: 0 4px; /* Padding is set by JS, but keep in case */
-            border-radius: 3px; /* Border-radius is set by JS, but keep in case */
-            font-size: 0.9em; /* Font-size is set by JS, but keep in case */
+            padding: 0 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
             vertical-align: middle;
             line-height: 1;
             white-space: nowrap;
             margin: 0 2px;
-            /* Background-color, color, border are set by JS */
         }
-
         @media (max-width: 768px) {
-            /* Keep header layout simple, let flexbox handle shrinking */
             .ai-chat-header {
-                gap: 5px; /* Reduce gap */
+                gap: 5px;
                 padding: 5px;
             }
             .ai-model-select {
-                min-width: 90px; /* Allow smaller select */
+                min-width: 90px;
                 font-size: 10px;
             }
             .ai-system-prompt {
-                min-width: 80px; /* Allow smaller prompt */
-                 font-size: 10px;
+                min-width: 80px;
+                font-size: 10px;
             }
             .ai-header-button svg {
-                 width: 16px;
-                 height: 16px;
+                width: 16px;
+                height: 16px;
             }
         }
         @media (max-width: 600px) {
@@ -543,45 +542,44 @@
                 left: 5px;
                 right: 5px;
                 border-radius: 6px;
-                padding-top: 40px; /* Adjust for potentially smaller header space */
+                padding-top: 40px;
             }
-             .ai-chat-header {
-                 height: 32px; /* Slightly smaller */
-                 padding: 3px 6px;
-             }
-             .ai-model-select, .ai-system-prompt {
-                 height: 24px;
-                 padding: 2px 5px;
-                 font-size: 9px;
-             }
-             .ai-header-button {
-                 padding: 3px;
-             }
-             .ai-header-button svg {
-                 width: 14px;
-                 height: 14px;
-             }
-
+            .ai-chat-header {
+                height: 32px;
+                padding: 3px 6px;
+            }
+            .ai-model-select, .ai-system-prompt {
+                height: 24px;
+                padding: 2px 5px;
+                font-size: 9px;
+            }
+            .ai-header-button {
+                padding: 3px;
+            }
+            .ai-header-button svg {
+                width: 14px;
+                height: 14px;
+            }
             .ai-user-message, .ai-ai-message {
-                 width: calc(100% - 20px);
+                width: calc(100% - 20px);
             }
             .ai-message-container {
                 margin-bottom: 25px;
             }
             .ai-message-actions {
                 right: 10px;
-                bottom: -20px; /* Adjust if needed */
+                bottom: -20px;
             }
             .ai-chat-input-container {
                 padding: 8px 10px;
                 gap: 8px;
             }
             .ai-chat-input {
-                 padding: 8px 10px;
-                 min-height: 38px;
-                 font-size: 12px;
+                padding: 8px 10px;
+                min-height: 38px;
+                font-size: 12px;
             }
-             .ai-send-button, .ai-stop-button {
+            .ai-send-button, .ai-stop-button {
                 width: 38px;
                 height: 38px;
                 min-width: 38px;
@@ -595,26 +593,22 @@
 </head>
 <body>
     <div class="ai-chat-panel" id="chatPanel">
-         <!-- Header is now absolutely positioned -->
-         <div class="ai-chat-header">
-             <div class="ai-header-controls">
-                 <select id="modelSelect" class="ai-model-select">
-                     <option value="mistral:codestral-latest">Mistral: Codestral (Latest)</option>
-                     <!-- Add more models as needed -->
-                 </select>
-                 <textarea id="systemPrompt" class="ai-system-prompt" placeholder="System Prompt (Optional)" rows="1"></textarea>
-             </div>
-             <div class="ai-header-actions">
-                 <button id="clearChatButton" class="ai-header-button" title="Clear Chat">
-                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                         <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                     </svg>
-                 </button>
-             </div>
-         </div>
-        <div class="ai-chat-messages" id="chatMessages">
-            <!-- Messages will be loaded here -->
+        <div class="ai-chat-header">
+            <div class="ai-header-controls">
+                <select id="modelSelect" class="ai-model-select">
+                    <option value="mistral:codestral-latest">Mistral: Codestral (Latest)</option>
+                </select>
+                <textarea id="systemPrompt" class="ai-system-prompt" placeholder="System Prompt (Optional)" rows="1"></textarea>
+            </div>
+            <div class="ai-header-actions">
+                <button id="clearChatButton" class="ai-header-button" title="Clear Chat">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                    </svg>
+                </button>
+            </div>
         </div>
+        <div class="ai-chat-messages" id="chatMessages"></div>
         <div class="ai-chat-input-container">
             <textarea class="ai-chat-input" id="chatInput" placeholder="Enter message..." rows="1"></textarea>
             <button id="sendMessageButton" class="ai-send-button" title="Send Message" disabled>
@@ -623,12 +617,11 @@
                 </svg>
             </button>
             <button id="stopButton" class="ai-stop-button" title="Stop Generation">
-                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M6 6h12v12H6V6z"/>
-                 </svg>
+                </svg>
             </button>
         </div>
-         <!-- Removed resize handle element -->
     </div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -640,18 +633,14 @@
             const modelSelect = document.getElementById('modelSelect');
             const systemPrompt = document.getElementById('systemPrompt');
             const chatPanel = document.getElementById('chatPanel');
-            // const resizeHandle = document.getElementById('resizeHandle'); // Removed
             const chatHeader = document.querySelector('.ai-chat-header');
             const initialChatInputHeight = chatInput.style.height || getComputedStyle(chatInput).minHeight;
 
             let chatHistory = [];
-            let currentAbortController = null; // To manage stopping API requests
+            let currentAbortController = null;
 
-            // --- API Configuration ---
-            // Provided API Keys
             const API_KEYS = {
                 MISTRAL: 'XlU2AOg8TPrxALMZ8yBz9Xey5Y0wgjX4'
-                // GEMINI key removed
             };
 
             marked.setOptions({
@@ -663,7 +652,6 @@
                 pedantic: false,
                 gfm: true,
                 breaks: true,
-                sanitize: false,
                 smartypants: false,
                 xhtml: false
             });
@@ -678,7 +666,7 @@
                 localStorage.setItem('aiChatSystemPrompt', systemPrompt.value);
             }
 
-             function addCopyButtonToPre(preElement) {
+            function addCopyButtonToPre(preElement) {
                 if (!preElement || preElement.querySelector('.ai-copy-button')) return;
 
                 const copyButton = document.createElement('button');
@@ -701,42 +689,36 @@
                     }).catch(err => {
                         console.error('Code copy failed', err);
                         copyButton.textContent = 'Error';
-                         setTimeout(() => {
+                        setTimeout(() => {
                             copyButton.textContent = 'Copy';
                         }, 1500);
                     });
                 });
             }
 
-            // Helper to determine if a color is light (for setting text color)
             function isLight(hexColor) {
                 const hex = hexColor.replace('#', '');
-                 if (hex.length === 3) { // Expand shorthand hex color
+                if (hex.length === 3) {
                     const r = parseInt(hex[0] + hex[0], 16);
                     const g = parseInt(hex[1] + hex[1], 16);
                     const b = parseInt(hex[2] + hex[2], 16);
-                    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                    return luminance > 0.6; // Slightly higher threshold for 3-digit
+                    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.6;
                 } else if (hex.length === 6) {
                     const r = parseInt(hex.substring(0, 2), 16);
                     const g = parseInt(hex.substring(2, 4), 16);
                     const b = parseInt(hex.substring(4, 6), 16);
-                    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-                    return luminance > 0.5;
+                    return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
                 }
-                return false; // Not a valid hex color
+                return false;
             }
 
-            // Function to highlight color codes in text nodes
             function highlightColorsInElement(element) {
                 const colorRegex = /#([a-fA-F0-9]{6}|[a-fA-F0-9]{3})/gi;
-
                 const walker = document.createTreeWalker(
                     element,
                     NodeFilter.SHOW_TEXT,
                     {
                         acceptNode: function(node) {
-                            // Skip text nodes that are inside <pre> or <code>
                             let parent = node.parentElement;
                             while (parent) {
                                 if (parent.tagName === 'PRE' || parent.tagName === 'CODE') {
@@ -744,11 +726,10 @@
                                 }
                                 parent = parent.parentElement;
                             }
-                            // Accept text nodes that contain color codes
-                             if (colorRegex.test(node.nodeValue)) {
-                                 return NodeFilter.FILTER_ACCEPT;
-                             }
-                             return NodeFilter.FILTER_SKIP; // Skip text nodes without colors
+                            if (colorRegex.test(node.nodeValue)) {
+                                return NodeFilter.FILTER_ACCEPT;
+                            }
+                            return NodeFilter.FILTER_SKIP;
                         }
                     }
                 );
@@ -759,24 +740,21 @@
                     nodesToProcess.push(currentNode);
                 }
 
-                // Process collected text nodes
                 nodesToProcess.forEach(textNode => {
                     const text = textNode.nodeValue;
                     const fragment = document.createDocumentFragment();
                     let lastIndex = 0;
                     let match;
 
-                    colorRegex.lastIndex = 0; // Reset regex state for exec
+                    colorRegex.lastIndex = 0;
                     while ((match = colorRegex.exec(text)) !== null) {
                         const colorCode = match[0];
                         const matchIndex = match.index;
 
-                        // Add text before the match
                         if (matchIndex > lastIndex) {
                             fragment.appendChild(document.createTextNode(text.substring(lastIndex, matchIndex)));
                         }
 
-                        // Add the color span
                         const colorSpan = document.createElement('span');
                         colorSpan.className = 'ai-color-preview';
                         colorSpan.style.backgroundColor = colorCode;
@@ -791,16 +769,22 @@
                         lastIndex = matchIndex + colorCode.length;
                     }
 
-                    // Add remaining text after the last match
                     if (lastIndex < text.length) {
                         fragment.appendChild(document.createTextNode(text.substring(lastIndex)));
                     }
 
-                    // Replace the original text node with the fragment
                     textNode.parentNode.replaceChild(fragment, textNode);
                 });
             }
 
+            function sanitizeHTML(html) {
+                return DOMPurify.sanitize(html, {
+                    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'hr', 'span'],
+                    ALLOWED_ATTR: ['href', 'class', 'style'],
+                    FORBID_TAGS: ['script', 'style', 'input', 'button', 'form', 'textarea'],
+                    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onfocus']
+                });
+            }
 
             function renderMessageDOM(id, content, isUserMessage, isStreaming = false) {
                 let messageContainer = chatMessages.querySelector(`.ai-message-container[data-id="${id}"]`);
@@ -820,61 +804,62 @@
                     if (!isUserMessage) {
                         const actionsDiv = document.createElement('div');
                         actionsDiv.className = 'ai-message-actions';
-                         actionsDiv.innerHTML = `
+                        actionsDiv.innerHTML = `
                             <button class="ai-action-button copy">Copy</button>
                             <button class="ai-action-button regenerate">Regen</button>
                             <button class="ai-action-button delete">Del</button>
                         `;
-                         messageContainer.appendChild(actionsDiv);
+                        messageContainer.appendChild(actionsDiv);
                     } else {
-                         const actionsDiv = document.createElement('div');
-                         actionsDiv.className = 'ai-message-actions';
-                         actionsDiv.innerHTML = `
+                        const actionsDiv = document.createElement('div');
+                        actionsDiv.className = 'ai-message-actions';
+                        actionsDiv.innerHTML = `
                             <button class="ai-action-button edit">Edit</button>
                             <button class="ai-action-button delete">Del</button>
-                         `;
-                         messageContainer.appendChild(actionsDiv);
-                         messageDiv.dataset.rawText = content;
+                        `;
+                        messageContainer.appendChild(actionsDiv);
+                        messageDiv.dataset.rawText = content;
                     }
                     chatMessages.appendChild(messageContainer);
                 }
 
                 if (!isUserMessage) {
                     messageDiv.dataset.rawAiContent = content;
-                    messageDiv.innerHTML = marked.parse(content); // Parse Markdown
-                    highlightColorsInElement(messageDiv); // Highlight colors in the result
-                    messageDiv.querySelectorAll('pre').forEach(pre => { // Process code blocks AFTER color highlighting
-                       if (pre.querySelector('code')) {
-                           hljs.highlightElement(pre.querySelector('code'));
-                       }
-                       addCopyButtonToPre(pre);
+                    const parsedContent = marked.parse(content);
+                    messageDiv.innerHTML = sanitizeHTML(parsedContent);
+                    highlightColorsInElement(messageDiv);
+                    messageDiv.querySelectorAll('pre').forEach(pre => {
+                        if (pre.querySelector('code')) {
+                            hljs.highlightElement(pre.querySelector('code'));
+                        }
+                        addCopyButtonToPre(pre);
                     });
 
-                     if (isStreaming) {
+                    if (isStreaming) {
                         messageDiv.classList.add('ai-streaming-cursor');
                         messageContainer.classList.add('ai-force-show-actions');
                     } else {
                         messageDiv.classList.remove('ai-streaming-cursor');
                         messageContainer.classList.remove('ai-force-show-actions');
                     }
-                } else { // User message
-                     messageDiv.innerHTML = marked.parse(content); // Parse Markdown
-                      highlightColorsInElement(messageDiv); // Highlight colors in the result
-                     messageDiv.querySelectorAll('pre').forEach(pre => { // Process code blocks AFTER color highlighting
-                           if (pre.querySelector('code')) {
-                               hljs.highlightElement(pre.querySelector('code'));
-                           }
-                         addCopyButtonToPre(pre);
-                     });
+                } else {
+                    const parsedContent = marked.parse(content);
+                    messageDiv.innerHTML = sanitizeHTML(parsedContent);
+                    highlightColorsInElement(messageDiv);
+                    messageDiv.querySelectorAll('pre').forEach(pre => {
+                        if (pre.querySelector('code')) {
+                            hljs.highlightElement(pre.querySelector('code'));
+                        }
+                        addCopyButtonToPre(pre);
+                    });
                 }
 
-
                 const isScrolledToBottom = chatMessages.scrollHeight - chatMessages.clientHeight <= chatMessages.scrollTop + 30;
-                 if (isScrolledToBottom || !messageContainer || isStreaming) { // Auto-scroll during streaming or if near bottom
+                if (isScrolledToBottom || !messageContainer || isStreaming) {
                     chatMessages.scrollTop = chatMessages.scrollHeight;
-                 }
+                }
 
-                 return messageContainer;
+                return messageContainer;
             }
 
             function addNewMessage(content, isUserMessage) {
@@ -889,12 +874,8 @@
             function updateAiMessage(id, chunk, isFinal = false) {
                 const messageIndex = chatHistory.findIndex(msg => msg.id === id);
                 if (messageIndex > -1) {
-                    // Append chunk to raw content
                     chatHistory[messageIndex].content += chunk;
-
-                    // Re-render the entire message content from updated raw content
                     renderMessageDOM(id, chatHistory[messageIndex].content, false, !isFinal);
-
                     if (isFinal) {
                         saveStateToStorage();
                     }
@@ -906,20 +887,14 @@
                 const storedModel = localStorage.getItem('aiChatSelectedModel');
                 const storedPrompt = localStorage.getItem('aiChatSystemPrompt');
 
-                if (storedModel) {
-                    // Check if the stored model still exists in the options
-                    if (Array.from(modelSelect.options).some(option => option.value === storedModel)) {
-                        modelSelect.value = storedModel;
-                    } else {
-                        // If the stored model is no longer available (e.g., Gemini removed),
-                        // default to the first available option.
-                        modelSelect.selectedIndex = 0;
-                        localStorage.setItem('aiChatSelectedModel', modelSelect.value); // Update storage
-                    }
+                if (storedModel && Array.from(modelSelect.options).some(option => option.value === storedModel)) {
+                    modelSelect.value = storedModel;
+                } else {
+                    modelSelect.selectedIndex = 0;
+                    localStorage.setItem('aiChatSelectedModel', modelSelect.value);
                 }
                 if (storedPrompt) {
                     systemPrompt.value = storedPrompt;
-                    // No height adjustment needed for single-line prompt
                 }
 
                 if (storedMessages) {
@@ -927,12 +902,12 @@
                     chatMessages.innerHTML = '';
                     chatHistory.forEach(msg => renderMessageDOM(msg.id, msg.content, msg.isUser, false));
                     if (chatHistory.length > 0) {
-                         chatMessages.scrollTop = chatMessages.scrollHeight;
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
                     }
                 }
             }
 
-             chatMessages.addEventListener('click', function(event) {
+            chatMessages.addEventListener('click', function(event) {
                 const target = event.target.closest('.ai-action-button');
                 if (!target) return;
 
@@ -945,89 +920,89 @@
                 const currentMessage = chatHistory[messageIndex];
 
                 if (target.classList.contains('edit') && messageContainer.classList.contains('ai-user-message')) {
-                     if (!messageContainer.classList.contains('ai-message-editing')) {
-                         // Store actions element to re-add later
-                         const actionsDiv = messageContainer.querySelector('.ai-message-actions');
-                         actionsDiv.style.display = 'none'; // Hide actions during edit
+                    if (!messageContainer.classList.contains('ai-message-editing')) {
+                        const actionsDiv = messageContainer.querySelector('.ai-message-actions');
+                        actionsDiv.style.display = 'none';
 
-                         const originalContentHTML = messageElement.innerHTML; // Store current rendered HTML
-                         const rawText = messageElement.dataset.rawText || currentMessage?.content || ''; // Get raw text
+                        const originalContentHTML = messageElement.innerHTML;
+                        const rawText = messageElement.dataset.rawText || currentMessage?.content || '';
 
-                         messageElement.innerHTML = ''; // Clear message content for editing
-                         const editTextArea = document.createElement('textarea');
-                         editTextArea.value = rawText;
-                         messageElement.appendChild(editTextArea);
-                         messageContainer.classList.add('ai-message-editing');
-                         editTextArea.focus();
-                         editTextArea.style.height = 'auto';
-                         editTextArea.style.height = (editTextArea.scrollHeight) + 'px';
-                         editTextArea.addEventListener('input', () => {
+                        messageElement.innerHTML = '';
+                        const editTextArea = document.createElement('textarea');
+                        editTextArea.value = rawText;
+                        messageElement.appendChild(editTextArea);
+                        messageContainer.classList.add('ai-message-editing');
+                        editTextArea.focus();
+                        editTextArea.style.height = 'auto';
+                        const scrollHeight = editTextArea.scrollHeight;
+                        const maxHeight = parseInt(getComputedStyle(editTextArea).maxHeight);
+                        editTextArea.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+                        editTextArea.style.overflowY = scrollHeight > maxHeight ? 'auto' : 'hidden';
+                        editTextArea.addEventListener('input', () => {
                             editTextArea.style.height = 'auto';
-                            editTextArea.style.height = (editTextArea.scrollHeight) + 'px';
-                         });
+                            const newScrollHeight = editTextArea.scrollHeight;
+                            editTextArea.style.height = Math.min(newScrollHeight, maxHeight) + 'px';
+                            editTextArea.style.overflowY = newScrollHeight > maxHeight ? 'auto' : 'hidden';
+                        });
 
-                         const editActions = document.createElement('div'); // Container for Save/Cancel
-                         editActions.style.marginTop = '8px';
-                         editActions.style.display = 'flex';
-                         editActions.style.gap = '8px';
+                        const editActions = document.createElement('div');
+                        editActions.style.marginTop = '8px';
+                        editActions.style.display = 'flex';
+                        editActions.style.gap = '8px';
 
-                         const saveButton = document.createElement('button');
-                         saveButton.textContent = 'Save & Resend';
-                         saveButton.className = 'ai-action-button';
-                         saveButton.onclick = () => {
-                             const newText = editTextArea.value;
-                             if (messageIndex > -1) {
-                                 chatHistory[messageIndex].content = newText;
-                                 saveStateToStorage();
-                             }
+                        const saveButton = document.createElement('button');
+                        saveButton.textContent = 'Save & Resend';
+                        saveButton.className = 'ai-action-button';
+                        saveButton.onclick = () => {
+                            const newText = editTextArea.value;
+                            if (messageIndex > -1) {
+                                chatHistory[messageIndex].content = newText;
+                                saveStateToStorage();
+                            }
 
-                             // Restore original HTML structure but with new content
-                             messageElement.innerHTML = marked.parse(newText);
-                             highlightColorsInElement(messageElement); // Apply color highlighting
-                              messageElement.querySelectorAll('pre').forEach(pre => {
-                                 if (pre.querySelector('code')) {
-                                     hljs.highlightElement(pre.querySelector('code'));
-                                 }
+                            messageElement.innerHTML = sanitizeHTML(marked.parse(newText));
+                            highlightColorsInElement(messageElement);
+                            messageElement.querySelectorAll('pre').forEach(pre => {
+                                if (pre.querySelector('code')) {
+                                    hljs.highlightElement(pre.querySelector('code'));
+                                }
                                 addCopyButtonToPre(pre);
-                             });
+                            });
 
-                             messageContainer.classList.remove('ai-message-editing');
-                             actionsDiv.style.display = ''; // Show actions again
+                            messageContainer.classList.remove('ai-message-editing');
+                            actionsDiv.style.display = '';
 
-                             // Delete subsequent messages
-                             chatHistory = chatHistory.slice(0, messageIndex + 1);
-                             let nextSibling = messageContainer.nextElementSibling;
-                             while (nextSibling && nextSibling.classList.contains('ai-message-container')) {
-                                 const toRemove = nextSibling;
-                                 nextSibling = nextSibling.nextElementSibling;
-                                 toRemove.remove();
-                             }
-                            saveStateToStorage(); // Save state after removing messages
+                            chatHistory = chatHistory.slice(0, messageIndex + 1);
+                            let nextSibling = messageContainer.nextElementSibling;
+                            while (nextSibling && nextSibling.classList.contains('ai-message-container')) {
+                                const toRemove = nextSibling;
+                                nextSibling = nextSibling.nextElementSibling;
+                                toRemove.remove();
+                            }
+                            saveStateToStorage();
 
-                             // Send new message
-                             fetchAiResponse(newText, messageId);
-                         };
+                            fetchAiResponse(newText, messageId);
+                        };
 
-                         const cancelButton = document.createElement('button');
-                         cancelButton.textContent = 'Cancel';
-                         cancelButton.className = 'ai-action-button';
-                         cancelButton.onclick = () => {
-                             // Restore original HTML and state
-                             messageElement.innerHTML = originalContentHTML;
-                              messageElement.querySelectorAll('pre').forEach(pre => {
-                                 if (pre.querySelector('code')) {
-                                     hljs.highlightElement(pre.querySelector('code'));
-                                 }
-                                 addCopyButtonToPre(pre);
-                             });
-                             messageContainer.classList.remove('ai-message-editing');
-                             actionsDiv.style.display = ''; // Show actions again
-                         };
+                        const cancelButton = document.createElement('button');
+                        cancelButton.textContent = 'Cancel';
+                        cancelButton.className = 'ai-action-button';
+                        cancelButton.onclick = () => {
+                            messageElement.innerHTML = originalContentHTML;
+                            messageElement.querySelectorAll('pre').forEach(pre => {
+                                if (pre.querySelector('code')) {
+                                    hljs.highlightElement(pre.querySelector('code'));
+                                }
+                                addCopyButtonToPre(pre);
+                            });
+                            messageContainer.classList.remove('ai-message-editing');
+                            actionsDiv.style.display = '';
+                        };
 
-                          editActions.appendChild(saveButton);
-                          editActions.appendChild(cancelButton);
-                          messageElement.appendChild(editActions); // Add save/cancel buttons inside the message div
-                     }
+                        editActions.appendChild(saveButton);
+                        editActions.appendChild(cancelButton);
+                        messageElement.appendChild(editActions);
+                    }
                 } else if (target.classList.contains('delete')) {
                     chatHistory = chatHistory.filter(msg => msg.id !== messageId);
                     saveStateToStorage();
@@ -1035,10 +1010,10 @@
                 } else if (target.classList.contains('copy') && messageContainer.classList.contains('ai-ai-message')) {
                     const rawAiContent = messageElement.dataset.rawAiContent || currentMessage?.content || '';
                     navigator.clipboard.writeText(rawAiContent).then(() => {
-                         target.textContent = 'Copied!';
-                         target.classList.add('copied-effect');
-                         target.disabled = true;
-                         setTimeout(() => {
+                        target.textContent = 'Copied!';
+                        target.classList.add('copied-effect');
+                        target.disabled = true;
+                        setTimeout(() => {
                             target.textContent = 'Copy';
                             target.classList.remove('copied-effect');
                             target.disabled = false;
@@ -1048,30 +1023,27 @@
                         const originalText = target.textContent;
                         target.textContent = 'Error';
                         target.disabled = true;
-                         setTimeout(() => {
+                        setTimeout(() => {
                             target.textContent = originalText;
                             target.disabled = false;
                         }, 1500);
                     });
                 } else if (target.classList.contains('regenerate')) {
-                     // Find the preceding user message
-                     let userMessageIndex = -1;
-                     for (let i = messageIndex - 1; i >= 0; i--) {
-                         if (chatHistory[i].isUser) {
-                             userMessageIndex = i;
-                             break;
-                         }
-                     }
+                    let userMessageIndex = -1;
+                    for (let i = messageIndex - 1; i >= 0; i--) {
+                        if (chatHistory[i].isUser) {
+                            userMessageIndex = i;
+                            break;
+                        }
+                    }
 
                     if (userMessageIndex !== -1) {
                         const userMessage = chatHistory[userMessageIndex];
-                        // Remove the current message and all subsequent messages
                         chatHistory = chatHistory.slice(0, messageIndex);
                         messageContainer.remove();
-                        let nextSibling = chatMessages.querySelector(`.ai-message-container[data-id="${messageId}"]`); // Start from the message just removed
+                        let nextSibling = chatMessages.querySelector(`.ai-message-container[data-id="${messageId}"]`);
                         while(nextSibling) {
                             const siblingId = nextSibling.dataset.id;
-                             // Double check history doesn't contain it (shouldn't after slice)
                             chatHistory = chatHistory.filter(msg => msg.id !== siblingId);
                             const toRemove = nextSibling;
                             nextSibling = nextSibling.nextElementSibling;
@@ -1079,81 +1051,75 @@
                         }
 
                         saveStateToStorage();
-                        // Resend the user message
                         fetchAiResponse(userMessage.content, userMessage.id);
                     } else {
                         console.error("Could not find the preceding user message to regenerate from.");
-                         const originalText = target.textContent;
-                         target.textContent = 'Error';
-                         setTimeout(() => target.textContent = originalText, 1500);
+                        const originalText = target.textContent;
+                        target.textContent = 'Error';
+                        setTimeout(() => target.textContent = originalText, 1500);
                     }
                 }
             });
 
             async function fetchAiResponse(userMessageContent, userMessageId) {
-                 const selectedValue = modelSelect.value;
-                 const [apiType, modelName] = selectedValue.split(':');
-                 const currentSystemPrompt = systemPrompt.value.trim();
+                const selectedValue = modelSelect.value;
+                const [apiType, modelName] = selectedValue.split(':');
+                const currentSystemPrompt = systemPrompt.value.trim();
 
-                 let apiKey;
-                 if (apiType === 'mistral') {
-                     apiKey = API_KEYS.MISTRAL;
-                 } else {
-                      console.error("Unknown or unsupported API type selected:", apiType);
-                      addNewMessage(`Error: Unsupported API type selected (${apiType}).`, false);
-                      return;
-                 }
+                let apiKey;
+                if (apiType === 'mistral') {
+                    apiKey = API_KEYS.MISTRAL;
+                } else {
+                    console.error("Unknown or unsupported API type selected:", apiType);
+                    addNewMessage(`Error: Unsupported API type selected (${apiType}).`, false);
+                    return;
+                }
 
-                 if (!apiKey) { // Check if key exists
+                if (!apiKey) {
                     addNewMessage(`Error: API Key for ${apiType.toUpperCase()} not available.`, false);
                     return;
-                 }
+                }
 
-                 showStopButton();
-                 currentAbortController = new AbortController();
+                showStopButton();
+                currentAbortController = new AbortController();
 
-                 const aiMessageId = generateId();
-                 // Find the index where the AI message should be inserted
-                 const userMessageIndex = chatHistory.findIndex(msg => msg.id === userMessageId);
-                 const aiMessage = { id: aiMessageId, content: '', isUser: false };
+                const aiMessageId = generateId();
+                const userMessageIndex = chatHistory.findIndex(msg => msg.id === userMessageId);
+                const aiMessage = { id: aiMessageId, content: '', isUser: false };
 
-                 if (userMessageIndex !== -1) {
+                if (userMessageIndex !== -1) {
                     chatHistory.splice(userMessageIndex + 1, 0, aiMessage);
-                 } else {
-                     chatHistory.push(aiMessage); // Fallback
-                 }
+                } else {
+                    chatHistory.push(aiMessage);
+                }
 
-                 const aiMessageContainer = renderMessageDOM(aiMessageId, '', false, true); // Render with streaming cursor
+                const aiMessageContainer = renderMessageDOM(aiMessageId, '', false, true);
 
-                 try {
-                     let response;
-                     const headers = { 'Content-Type': 'application/json' };
-                     let body;
-                     let url;
+                try {
+                    let response;
+                    const headers = { 'Content-Type': 'application/json' };
+                    let body;
+                    let url;
 
-                     if (apiType === 'mistral') {
-                         headers['Authorization'] = `Bearer ${apiKey}`;
-                         url = 'https://api.mistral.ai/v1/chat/completions';
-                         let historyForApi = [];
-                         if (currentSystemPrompt) {
-                             historyForApi.push({ role: 'system', content: currentSystemPrompt });
-                         }
-                         // Send messages up to the current user message + the placeholder AI message
-                         const startIndex = chatHistory.findIndex(msg => msg.id === aiMessageId);
-                         chatHistory.slice(0, startIndex).forEach(msg => {
-                              historyForApi.push({ role: msg.isUser ? 'user' : 'assistant', content: msg.content });
-                         });
-                          // Add the user message being responded to
-                          historyForApi.push({ role: 'user', content: userMessageContent });
+                    if (apiType === 'mistral') {
+                        headers['Authorization'] = `Bearer ${apiKey}`;
+                        url = 'https://api.mistral.ai/v1/chat/completions';
+                        let historyForApi = [];
+                        if (currentSystemPrompt) {
+                            historyForApi.push({ role: 'system', content: currentSystemPrompt });
+                        }
+                        const startIndex = chatHistory.findIndex(msg => msg.id === aiMessageId);
+                        chatHistory.slice(0, startIndex).forEach(msg => {
+                            historyForApi.push({ role: msg.isUser ? 'user' : 'assistant', content: msg.content });
+                        });
+                        historyForApi.push({ role: 'user', content: userMessageContent });
 
-                         body = JSON.stringify({
-                             model: modelName,
-                             messages: historyForApi,
-                             stream: true
-                         });
-
-                     }
-                     // Removed Gemini 'else if' block here
+                        body = JSON.stringify({
+                            model: modelName,
+                            messages: historyForApi,
+                            stream: true
+                        });
+                    }
 
                     response = await fetch(url, {
                         method: 'POST',
@@ -1162,78 +1128,73 @@
                         signal: currentAbortController.signal
                     });
 
-                     if (!response.ok) {
-                         const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                         throw new Error(`API Error (${response.status}): ${errorData.error?.message || errorData.message || 'Unknown error'}`);
-                     }
-                     if (!response.body) {
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                        throw new Error(`API Error (${response.status}): ${errorData.error?.message || errorData.message || 'Unknown error'}`);
+                    }
+                    if (!response.body) {
                         throw new Error("Response body is empty.");
-                     }
+                    }
 
-                     const reader = response.body.getReader();
-                     const decoder = new TextDecoder();
-                     let buffer = '';
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
 
-                     while (true) {
-                         const { done, value } = await reader.read();
-                         if (done) break;
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
 
-                         buffer += decoder.decode(value, { stream: true });
+                        buffer += decoder.decode(value, { stream: true });
 
-                         if (apiType === 'mistral') {
-                             let lines = buffer.split('\n\n');
-                             buffer = lines.pop() || '';
+                        if (apiType === 'mistral') {
+                            let lines = buffer.split('\n\n');
+                            buffer = lines.pop() || '';
 
-                             for (const line of lines) {
-                                 if (line.startsWith('data: ')) {
-                                     const dataContent = line.substring(6).trim();
-                                     if (dataContent === '[DONE]') break;
-                                     try {
-                                         const chunkJson = JSON.parse(dataContent);
-                                         const chunkText = chunkJson.choices?.[0]?.delta?.content || '';
-                                         if (chunkText) {
-                                             updateAiMessage(aiMessageId, chunkText, false);
-                                         }
-                                     } catch (e) {
-                                         console.error("Failed to parse Mistral chunk:", dataContent, e);
-                                     }
-                                 }
-                             }
-                         }
-                         // Removed Gemini response parsing block here
-                     }
+                            for (const line of lines) {
+                                if (line.startsWith('data: ')) {
+                                    const dataContent = line.substring(6).trim();
+                                    if (dataContent === '[DONE]') break;
+                                    try {
+                                        const chunkJson = JSON.parse(dataContent);
+                                        const chunkText = chunkJson.choices?.[0]?.delta?.content || '';
+                                        if (chunkText) {
+                                            updateAiMessage(aiMessageId, chunkText, false);
+                                        }
+                                    } catch (e) {
+                                        console.error("Failed to parse Mistral chunk:", dataContent, e);
+                                    }
+                                }
+                            }
+                        }
+                    }
 
-                     // Final update to remove cursor and save state
-                     updateAiMessage(aiMessageId, '', true);
+                    updateAiMessage(aiMessageId, '', true);
 
-                 } catch (error) {
-                      console.error("API Fetch Error:", error);
-                      const errorMsg = `Error: ${error.message || 'Failed to fetch response.'}`;
-                       const msgIndex = chatHistory.findIndex(m => m.id === aiMessageId);
+                } catch (error) {
+                    console.error("API Fetch Error:", error);
+                    const errorMsg = `Error: ${error.message || 'Failed to fetch response.'}`;
+                    const msgIndex = chatHistory.findIndex(m => m.id === aiMessageId);
 
-                      if (error.name === 'AbortError') {
-                         console.log("Request aborted by user.");
-                         if (msgIndex > -1) {
-                             // Append "(Stopped)" or similar
-                             chatHistory[msgIndex].content += " (Stopped)";
-                              renderMessageDOM(aiMessageId, chatHistory[msgIndex].content, false, false); // Final render, not streaming
-                              saveStateToStorage();
-                         }
-                      } else {
-                          if (msgIndex > -1) {
-                              // Replace message content with error message
-                             chatHistory[msgIndex].content = errorMsg;
-                              renderMessageDOM(aiMessageId, errorMsg, false, false); // Final render, not streaming
-                              saveStateToStorage();
-                         } else {
-                              // If message was somehow removed, add a new error message
-                             addNewMessage(errorMsg, false);
-                         }
-                      }
-                 } finally {
-                     hideStopButton();
-                     currentAbortController = null;
-                 }
+                    if (error.name === 'AbortError') {
+                        console.log("Request aborted by user.");
+                        if (msgIndex > -1) {
+                            chatHistory[msgIndex].content += " (Stopped)";
+                            renderMessageDOM(aiMessageId, chatHistory[msgIndex].content, false, false);
+                            saveStateToStorage();
+                        }
+                    } else {
+                        if (msgIndex > -1) {
+                            chatHistory[msgIndex].content = errorMsg;
+                            renderMessageDOM(aiMessageId, errorMsg, false, false);
+                            saveStateToStorage();
+                        } else {
+                            addNewMessage(errorMsg, false);
+                        }
+                    }
+                } finally {
+                    hideStopButton();
+                    currentAbortController = null;
+                }
             }
 
             function handleSendMessage() {
@@ -1254,30 +1215,30 @@
             chatInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                     if (!sendMessageButton.disabled) {
-                         handleSendMessage();
-                     }
+                    if (!sendMessageButton.disabled) {
+                        handleSendMessage();
+                    }
                 }
             });
 
             chatInput.addEventListener('input', () => {
-                 chatInput.style.height = 'auto';
-                 const scrollHeight = chatInput.scrollHeight;
-                 const maxHeight = parseInt(getComputedStyle(chatInput).maxHeight);
+                chatInput.style.height = 'auto';
+                const scrollHeight = chatInput.scrollHeight;
+                const maxHeight = parseInt(getComputedStyle(chatInput).maxHeight);
 
-                 if (scrollHeight > maxHeight) {
-                     chatInput.style.height = maxHeight + 'px';
-                     chatInput.style.overflowY = 'auto';
-                 } else {
-                     chatInput.style.height = scrollHeight + 'px';
-                     chatInput.style.overflowY = 'hidden';
-                 }
+                if (scrollHeight > maxHeight) {
+                    chatInput.style.height = maxHeight + 'px';
+                    chatInput.style.overflowY = 'auto';
+                } else {
+                    chatInput.style.height = scrollHeight + 'px';
+                    chatInput.style.overflowY = 'hidden';
+                }
 
-                 if (chatInput.value === '') {
-                     chatInput.style.height = initialChatInputHeight;
-                     chatInput.style.overflowY = 'hidden';
-                 }
-                 sendMessageButton.disabled = chatInput.value.trim() === '' || stopButton.style.display === 'flex';
+                if (chatInput.value === '') {
+                    chatInput.style.height = initialChatInputHeight;
+                    chatInput.style.overflowY = 'hidden';
+                }
+                sendMessageButton.disabled = chatInput.value.trim() === '' || stopButton.style.display === 'flex';
             });
 
             clearChatButton.addEventListener('click', () => {
@@ -1290,101 +1251,56 @@
 
             modelSelect.addEventListener('change', saveStateToStorage);
             systemPrompt.addEventListener('input', () => {
-                // No height adjustment needed for single-line prompt
                 saveStateToStorage();
             });
 
-             stopButton.addEventListener('click', () => {
-                 if (currentAbortController) {
-                     currentAbortController.abort();
-                     console.log("Stop button clicked, aborting request...");
-                 }
-             });
-
-             function showStopButton() {
-                 stopButton.style.display = 'flex';
-                 sendMessageButton.style.display = 'none';
-                 sendMessageButton.disabled = true; // Ensure send button is disabled while stopping
-             }
-             function hideStopButton() {
-                 stopButton.style.display = 'none';
-                 sendMessageButton.style.display = 'flex';
-                 sendMessageButton.disabled = chatInput.value.trim() === ''; // Re-enable send button if input has text
-             }
-
-             // --- Removed Resizing Logic ---
-             /*
-             let isResizing = false;
-             let startX, startY, startWidth, startHeight;
-
-             resizeHandle.addEventListener('mousedown', (e) => {
-                 isResizing = true;
-                 startX = e.clientX;
-                 startY = e.clientY;
-                 startWidth = chatPanel.offsetWidth;
-                 startHeight = chatPanel.offsetHeight;
-                 chatPanel.style.userSelect = 'none';
-                 document.body.style.cursor = 'nwse-resize';
-                  document.body.style.pointerEvents = 'none'; // Prevent interacting with other elements during resize
-             });
-
-             document.addEventListener('mousemove', (e) => {
-                 if (!isResizing) return;
-                 const newWidth = startWidth + (e.clientX - startX);
-                 const newHeight = startHeight + (e.clientY - startY);
-                  const minWidth = parseInt(getComputedStyle(chatPanel).minWidth) || 320;
-                  const minHeight = parseInt(getComputedStyle(chatPanel).minHeight) || 380;
-                 chatPanel.style.width = `${Math.max(minWidth, newWidth)}px`;
-                 chatPanel.style.height = `${Math.max(minHeight, newHeight)}px`;
-             });
-
-             document.addEventListener('mouseup', () => {
-                 if (isResizing) {
-                     isResizing = false;
-                     chatPanel.style.userSelect = '';
-                     document.body.style.cursor = '';
-                     document.body.style.pointerEvents = ''; // Re-enable pointer events
-                 }
-             });
-             */
-
-            // Show header when mouse is near the top
-            let headerTimeout;
-            chatPanel.addEventListener('mousemove', (e) => {
-                const rect = chatPanel.getBoundingClientRect();
-                const headerHeight = chatHeader.offsetHeight; // Get actual header height
-                // Show header if mouse is within the header area plus a small buffer
-                if (e.clientY - rect.top < headerHeight + 10) { // Adjust the threshold as needed
-                    chatHeader.style.opacity = '1';
-                     clearTimeout(headerTimeout); // Keep header visible while in area
-                     headerTimeout = setTimeout(() => {
-                        // Hide header if mouse hasn't moved back into the area within a short time
-                        // (This is redundant with mouseleave, but can handle edge cases)
-                        if (e.clientY - rect.top >= headerHeight + 10) {
-                           chatHeader.style.opacity = '0';
-                        }
-                     }, 1000); // Hide after 1 second of no movement near top
-                } else {
-                     // Start fade-out only if not actively in header area
-                    clearTimeout(headerTimeout);
-                    headerTimeout = setTimeout(() => {
-                         chatHeader.style.opacity = '0';
-                    }, 300); // Fade out after 300ms delay
+            stopButton.addEventListener('click', () => {
+                if (currentAbortController) {
+                    currentAbortController.abort();
+                    console.log("Stop button clicked, aborting request...");
                 }
             });
 
-             // Ensure header hides when mouse leaves the panel
+            function showStopButton() {
+                stopButton.style.display = 'flex';
+                sendMessageButton.style.display = 'none';
+                sendMessageButton.disabled = true;
+            }
+            function hideStopButton() {
+                stopButton.style.display = 'none';
+                sendMessageButton.style.display = 'flex';
+                sendMessageButton.disabled = chatInput.value.trim() === '';
+            }
+
+            let headerTimeout;
+            chatPanel.addEventListener('mousemove', (e) => {
+                const rect = chatPanel.getBoundingClientRect();
+                const headerHeight = chatHeader.offsetHeight;
+                if (e.clientY - rect.top < headerHeight + 10) {
+                    chatHeader.style.opacity = '1';
+                    clearTimeout(headerTimeout);
+                    headerTimeout = setTimeout(() => {
+                        if (e.clientY - rect.top >= headerHeight + 10) {
+                            chatHeader.style.opacity = '0';
+                        }
+                    }, 1000);
+                } else {
+                    clearTimeout(headerTimeout);
+                    headerTimeout = setTimeout(() => {
+                        chatHeader.style.opacity = '0';
+                    }, 300);
+                }
+            });
+
             chatPanel.addEventListener('mouseleave', () => {
-                 clearTimeout(headerTimeout);
-                 headerTimeout = setTimeout(() => {
-                     chatHeader.style.opacity = '0';
-                 }, 300); // Small delay before hiding
+                clearTimeout(headerTimeout);
+                headerTimeout = setTimeout(() => {
+                    chatHeader.style.opacity = '0';
+                }, 300);
             });
 
             loadStateFromStorage();
-            // Correct initial state for sendMessageButton based on potentially loaded chatInput value and stopButton state
             sendMessageButton.disabled = chatInput.value.trim() === '' || stopButton.style.display === 'flex';
-
         });
     </script>
 </body>
