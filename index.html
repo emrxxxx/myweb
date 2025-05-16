@@ -6,20 +6,40 @@
     <title>AI Chat Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <style>
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #2c2f33;
+            --bg-tertiary: #23272a;
+            --bg-quaternary: #36393f;
+            --text-primary: #dcddde;
+            --text-secondary: #b0b3b8;
+            --text-tertiary: #72767d;
+            --border-primary: #1e2124;
+            --border-secondary: #4a4d53;
+            --border-tertiary: #4f545c;
+            --accent-primary: #5865f2;
+            --accent-secondary: #f04747;
+            --success: #4CAF50;
+            --scrollbar-thumb: #4a4d53;
+            --scrollbar-track: #1a1c1e;
+            --transition: 0.2s ease;
+        }
+
         body {
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #1e1e1e;
-            color: #dcddde;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
         }
+
         .ai-chat-panel {
             position: fixed;
             top: 20px;
             bottom: 20px;
             left: 20px;
             right: 20px;
-            background-color: #2c2f33;
+            background-color: var(--bg-secondary);
             border-radius: 8px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.4);
             display: flex;
@@ -27,21 +47,22 @@
             overflow: hidden;
             z-index: 9999;
             font-size: 12px;
-            color: #dcddde;
+            color: var(--text-primary);
             box-sizing: border-box;
             min-width: 320px;
             min-height: 380px;
-            padding-top: 90px; /* Adjusted for dynamic header */
+            padding-top: 90px;
             isolation: isolate;
         }
+
         .ai-chat-header {
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
             padding: 5px 10px;
-            background-color: #23272a;
-            border-bottom: 1px solid #1e2124;
+            background-color: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-primary);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -51,46 +72,53 @@
             opacity: 0;
             transition: opacity 0.3s ease-in-out;
         }
+
         .ai-chat-panel:hover .ai-chat-header {
             opacity: 1;
         }
-        .ai-header-controls {
+
+        .ai-header-controls, .ai-header-actions {
             display: flex;
             align-items: center;
             gap: 8px;
+        }
+
+        .ai-header-controls {
             flex-grow: 1;
             min-width: 0;
         }
+
         .ai-header-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
             flex-shrink: 0;
         }
+
         .ai-header-button {
             background: none;
             border: none;
-            color: #b0b3b8;
+            color: var(--text-secondary);
             cursor: pointer;
             padding: 5px;
             border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background-color 0.2s ease, color 0.2s ease;
+            transition: background-color var(--transition), color var(--transition);
         }
+
         .ai-header-button:hover {
-            background-color: #40444b;
-            color: #dcddde;
+            background-color: var(--bg-quaternary);
+            color: var(--text-primary);
         }
+
         .ai-header-button svg {
             width: 18px;
             height: 18px;
         }
+
         .ai-model-select, .ai-system-prompt {
-            background-color: #36393f;
-            color: #dcddde;
-            border: 1px solid #36393f;
+            background-color: var(--bg-quaternary);
+            color: var(--text-primary);
+            border: 1px solid var(--bg-quaternary);
             border-radius: 4px;
             padding: 4px 8px;
             font-size: 11px;
@@ -99,105 +127,114 @@
             box-sizing: border-box;
             line-height: 1.4;
         }
+
         .ai-model-select {
             min-width: 120px;
             flex-shrink: 0;
         }
+
         .ai-system-prompt {
             flex-grow: 1;
             min-width: 100px;
             overflow-y: auto;
-            max-height: 80px; /* Approximately 5 lines */
-            line-height: 1.4;
-            /* Match chat input styling for scrollbar and padding */
+            max-height: 80px;
             padding: 10px 12px;
-            resize: none; /* Prevent manual resizing */
+            resize: none;
             scrollbar-width: thin;
-            scrollbar-color: #4a4d53 #23272a;
+            scrollbar-color: var(--scrollbar-thumb) var(--bg-tertiary);
         }
+
         .ai-system-prompt::-webkit-scrollbar {
             width: 5px;
         }
+
         .ai-system-prompt::-webkit-scrollbar-track {
-            background: #23272a;
+            background: var(--bg-tertiary);
         }
+
         .ai-system-prompt::-webkit-scrollbar-thumb {
-            background-color: #4a4d53;
+            background-color: var(--scrollbar-thumb);
             border-radius: 3px;
         }
+
         .ai-chat-messages {
             flex: 1;
             padding: 15px;
             overflow-y: auto;
-            background-color: #2c2f33;
+            background-color: var(--bg-secondary);
             scrollbar-width: thin;
-            scrollbar-color: #4a4d53 #23272a;
+            scrollbar-color: var(--scrollbar-thumb) var(--bg-tertiary);
             word-break: break-word;
             contain: content;
         }
+
         .ai-chat-messages::-webkit-scrollbar {
             width: 6px;
         }
+
         .ai-chat-messages::-webkit-scrollbar-track {
-            background: #23272a;
+            background: var(--bg-tertiary);
         }
+
         .ai-chat-messages::-webkit-scrollbar-thumb {
-            background-color: #4a4d53;
+            background-color: var(--scrollbar-thumb);
             border-radius: 3px;
         }
+
         .ai-chat-input-container {
             padding: 12px 35px;
             display: flex;
-            /* gap: 10px; Removed gap */
-            margin: auto;
             align-items: center;
-            transform: translateY(-30px);
-            position: relative; /* Added relative positioning */
-            width: calc(70vw); /* Match message width - container padding */
+            position: relative;
+            width: 85%;
             box-sizing: border-box;
-            min-width: 300px; /* Prevent container from collapsing */
+            margin: 0 auto;
         }
         .ai-chat-input {
-            flex-grow: 1; /* Changed flex: 1 */
-            width: 100%; /* Ensure it takes full width of container */
-            background-color: #36393f;
-            color: #dcddde;
+            flex-grow: 1;
+            width: 100%;
+            background-color: var(--bg-quaternary);
+            color: var(--text-primary);
             font-size: 13px;
             border: 1px solid #313131;
             outline: none;
-            padding: 10px 50px 10px 12px; /* Adjusted padding-right for button */
+            padding: 10px 50px 10px 12px;
             border-radius: 6px;
             box-sizing: border-box;
             resize: none;
-            /* width: 50vw; Removed fixed width */
             min-height: 60px;
             max-height: 220px;
             overflow-y: auto;
             scrollbar-width: thin;
-            scrollbar-color: #4a4d53 #23272a;
-            transition: border-color 0.2s ease;
+            scrollbar-color: var(--scrollbar-thumb) var(--bg-tertiary);
+            transition: border-color var(--transition);
         }
+
         .ai-chat-input:focus {
-            border-color: #4f545c;
+            border-color: var(--border-tertiary);
             box-shadow: none;
         }
+
         .ai-chat-input::-webkit-scrollbar {
             width: 5px;
         }
+
         .ai-chat-input::-webkit-scrollbar-track {
-            background: #23272a;
+            background: var(--bg-tertiary);
         }
+
         .ai-chat-input::-webkit-scrollbar-thumb {
-            background-color: #4a4d53;
+            background-color: var(--scrollbar-thumb);
             border-radius: 3px;
         }
+
         .ai-send-button, .ai-stop-button {
-            position: absolute; /* Position buttons absolutely */
-            bottom: 20px; /* Adjust position */
-            right: 45px; /* Adjust position (42px button width + 10px container padding - 7px for centering) */
-            background-color: #36393f;
-            color: #dcddde;
-            border: 1px solid #36393f;
+            position: absolute;
+            bottom: 20px;
+            right: 45px;
+            background-color: var(--bg-quaternary);
+            color: var(--text-primary);
+            border: 1px solid var(--bg-quaternary);
             border-radius: 6px;
             width: 42px;
             height: 42px;
@@ -206,122 +243,130 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-             z-index: 2; /* Ensure button is above textarea */
+            transition: background-color var(--transition), border-color var(--transition), color var(--transition);
+            z-index: 2;
         }
+
         .ai-send-button:hover:not(:disabled), .ai-stop-button:hover {
             background-color: #40444b;
-            border-color: #4f545c;
+            border-color: var(--border-tertiary);
         }
+
         .ai-send-button svg, .ai-stop-button svg {
             width: 20px;
             height: 20px;
-            fill: #b0b3b8;
-            transition: fill 0.2s ease;
+            fill: var(--text-secondary);
+            transition: fill var(--transition);
         }
+
         .ai-send-button:hover:not(:disabled) svg, .ai-stop-button:hover svg {
-            fill: #dcddde;
+            fill: var(--text-primary);
         }
+
         .ai-send-button:disabled {
             cursor: not-allowed;
         }
+
         .ai-send-button:disabled svg {
-            fill: #72767d;
+            fill: var(--text-tertiary);
         }
+
         .ai-stop-button {
-            background-color: #f04747;
-            border-color: #f04747;
-            display: none; /* Will be shown via JS */
+            background-color: var(--accent-secondary);
+            border-color: var(--accent-secondary);
+            display: none;
         }
+
         .ai-stop-button:hover {
             background-color: #d63939;
             border-color: #d63939;
         }
+
         .ai-stop-button svg {
-            fill: #dcddde;
+            fill: var(--text-primary);
         }
+
         .ai-message-container {
             position: relative;
             margin-bottom: 30px;
             padding: 5px 0;
             border-radius: 4px;
+            display: flex;
+            width: 100%;
         }
+
         .ai-chat-message {
             padding: 3px 7px;
             max-width: 100%;
-            color: #dcddde;
+            color: var(--text-primary);
             font-size: 13px;
             line-height: 1.4;
             overflow-wrap: break-word;
             word-break: break-word;
-
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 13px;
-            color: #c0c0c0;
-            line-height: 1.4;
         }
+
+        .ai-user-message, .ai-ai-message {
+            margin: 0 auto;
+            max-width: 65%;
+            display: flex;
+        }
+
         .ai-user-message {
-            margin: 0 auto;
-            width: calc(60vw - 20px);
-            display: flex;
-            justify-content: flex-end; /* Align user messages to the right */
+            justify-content: flex-end;
         }
+
         .ai-ai-message {
-            margin: 0 auto;
-            width: calc(60vw - 20px);
-            display: flex;
-            justify-content: flex-start; /* Keep AI messages on the left */
+            justify-content: flex-start;
         }
+
         .ai-user-message .ai-chat-message {
             background-color: #c0c0c0;
             color: #000000;
-            margin-bottom: 25px;
             padding: 10px 14px;
             border-radius: 6px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            box-sizing: border-box;
-            position: relative;
-            display: inline-block; /* Allow content-based width */
-            max-width: 100%; /* Restrict to container width */
+            margin-right: 30px;
         }
+
         .ai-ai-message .ai-chat-message {
             background-color: transparent;
             color: #c0c0c0;
             margin-bottom: 25px;
             padding: 10px 14px;
             border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            box-sizing: border-box;
             position: relative;
-            display: inline-block; /* Allow content-based width */
-            max-width: 100%; /* Restrict to container width */
+            margin-left: -30px;
         }
+
         .ai-streaming-cursor::after {
             content: '▋';
             display: inline-block;
             animation: ai-blink 1s step-end infinite;
             margin-left: 2px;
             vertical-align: baseline;
-            color: #dcddde;
+            color: var(--text-primary);
             opacity: 1;
         }
+
         @keyframes ai-blink {
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
         }
+
         .ai-chat-message code {
-            background-color: #23272a;
+            background-color: var(--bg-tertiary);
             padding: 3px 5px;
-            
             border-radius: 4px;
             font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
             font-size: 12px;
-            border: 1px solid #1e2124;
+            border: 1px solid var(--border-primary);
         }
+
         .ai-chat-message pre {
             position: relative;
-            background-color: #23272a;
-            border: 1px solid #1a1c1e;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--scrollbar-track);
             border-radius: 5px;
             padding: 8px;
             margin: 10px 0;
@@ -333,19 +378,23 @@
             max-width: 100%;
             box-sizing: border-box;
             scrollbar-width: thin;
-            scrollbar-color: #4a4d53 #1a1c1e;
+            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
         }
+
         .ai-chat-message pre::-webkit-scrollbar {
             width: 6px;
             height: 6px;
         }
+
         .ai-chat-message pre::-webkit-scrollbar-track {
-            background: #1a1c1e;
+            background: var(--scrollbar-track);
         }
+
         .ai-chat-message pre::-webkit-scrollbar-thumb {
-            background-color: #4a4d53;
+            background-color: var(--scrollbar-thumb);
             border-radius: 3px;
         }
+
         .ai-chat-message pre code {
             background-color: transparent;
             padding: 0;
@@ -355,34 +404,39 @@
             word-wrap: break-word;
             border: none;
         }
+
         .ai-copy-button {
             position: sticky;
             bottom: 5px;
             right: 5px;
             background-color: #40444b;
-            color: #b0b3b8;
-            border: 1px solid #36393f;
+            color: var(--text-secondary);
+            border: 1px solid var(--bg-quaternary);
             border-radius: 3px;
             padding: 2px 6px;
             cursor: pointer;
             font-size: 10px;
             opacity: 0;
-            transition: opacity 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+            transition: opacity var(--transition), background-color var(--transition), color var(--transition);
             z-index: 10;
-            float: right; /* Keep float for layout flow within pre */
+            float: right;
         }
+
         .ai-chat-message pre:hover .ai-copy-button {
             opacity: 1;
         }
+
         .ai-copy-button:hover {
             background-color: #51565c;
-            color: #dcddde;
+            color: var(--text-primary);
         }
+
         .ai-copy-button.copied-effect {
-            background-color: #4CAF50 !important;
+            background-color: var(--success) !important;
             color: white !important;
-            border-color: #4CAF50 !important;
+            border-color: var(--success) !important;
         }
+
         .ai-message-actions {
             position: absolute;
             bottom: 6px;
@@ -390,47 +444,53 @@
             display: inline-block;
             gap: 6px;
             opacity: 0;
-            transition: opacity 0.2s ease;
+            transition: opacity var(--transition);
             font-size: 11px;
             padding: 0;
             margin-top: 0;
             z-index: 5;
         }
+
         .ai-message-container:hover .ai-message-actions,
         .ai-message-container.ai-force-show-actions .ai-message-actions {
             opacity: 1;
         }
+
         .ai-action-button {
             padding: 3px 8px;
             font-size: 11px;
-            color: #b0b3b8;
-            background-color: #36393f;
+            color: var(--text-secondary);
+            background-color: var(--bg-quaternary);
             border: 1px solid #2f3136;
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+            transition: background-color var(--transition), color var(--transition), border-color var(--transition);
         }
+
         .ai-action-button:hover {
             background-color: #40444b;
-            color: #dcddde;
-            border-color: #4a4d53;
+            color: var(--text-primary);
+            border-color: var(--border-secondary);
         }
+
         .ai-action-button.delete:hover {
             color: #fff;
-            background-color: #f04747;
+            background-color: var(--accent-secondary);
             border-color: #d63939;
         }
+
         .ai-action-button.copied-effect {
-            background-color: #4CAF50;
+            background-color: var(--success);
             color: white;
-            border-color: #4CAF50;
+            border-color: var(--success);
         }
+
         .ai-message-editing textarea {
             width: 100%;
             background-color: #40444b;
-            color: #dcddde;
+            color: var(--text-primary);
             font-size: 13px;
-            border: 1px solid #4f545c;
+            border: 1px solid var(--border-tertiary);
             box-shadow: none;
             outline: none;
             padding: 8px 12px;
@@ -443,6 +503,7 @@
             margin-bottom: 8px;
             overflow-y: auto;
         }
+
         .ai-chat-message h1, .ai-chat-message h2, .ai-chat-message h3,
         .ai-chat-message h4, .ai-chat-message h5, .ai-chat-message h6 {
             margin-top: 1.2em;
@@ -450,88 +511,108 @@
             font-weight: 600;
             line-height: 1.3;
         }
+
         .ai-chat-message h1 {
             font-size: 1.6em;
-            border-bottom: 1px solid #4a4d53;
+            border-bottom: 1px solid var(--border-secondary);
             padding-bottom: 0.3em;
         }
+
         .ai-chat-message h2 {
             font-size: 1.4em;
-            border-bottom: 1px solid #4a4d53;
+            border-bottom: 1px solid var(--border-secondary);
             padding-bottom: 0.3em;
         }
+
         .ai-chat-message h3 {
             font-size: 1.2em;
         }
+
         .ai-chat-message h4 {
             font-size: 1.1em;
         }
+
         .ai-chat-message h5 {
             font-size: 1em;
             font-weight: 500;
         }
+
         .ai-chat-message h6 {
             font-size: 0.9em;
-            color: #b0b3b8;
+            color: var(--text-secondary);
             font-weight: 500;
         }
+
         .ai-chat-message blockquote {
             margin: 10px 0 10px 5px;
             padding: 5px 15px;
-            border-left: 3px solid #5865f2;
+            border-left: 3px solid var(--accent-primary);
             background-color: rgba(88, 101, 242, 0.05);
-            color: #b0b3b8;
+            color: var(--text-secondary);
             font-style: normal;
             border-radius: 0 4px 4px 0;
         }
+
         .ai-chat-message blockquote p:first-child {
             margin-top: 0;
         }
+
         .ai-chat-message blockquote p:last-child {
             margin-bottom: 0;
         }
+
         .ai-chat-message ul, .ai-chat-message ol {
             padding-left: 25px;
             margin: 10px 0;
         }
+
         .ai-chat-message li {
             margin-bottom: 5px;
         }
+
         .ai-chat-message li:last-child {
             margin-bottom: 0;
         }
+
         .ai-chat-message hr {
             border: none;
             border-top: 1px solid #40444b;
             margin: 20px 0;
         }
+
         .ai-chat-message a {
             color: #7289da;
             text-decoration: none;
             font-weight: 500;
         }
+
         .ai-chat-message a:hover {
             text-decoration: underline;
         }
+
         .ai-chat-loading {
             display: inline-block;
             margin-left: 4px;
         }
+
         .ai-chat-loading-dot {
             display: inline-block;
             width: 5px;
             height: 5px;
             border-radius: 50%;
-            background-color: #dcddde;
+            background-color: var(--text-primary);
             margin-right: 2px;
             animation: ai-chat-loading 1.4s infinite ease-in-out both;
         }
+
         .ai-chat-loading-dot:nth-child(1) {
             animation-delay: -0.32s;
         }
+
         .ai-chat-loading-dot:nth-child(2) {
             animation-delay: -0.16s;
         }
+
         @keyframes ai-chat-loading {
             0%, 80%, 100% {
                 transform: scale(0);
@@ -540,6 +621,7 @@
                 transform: scale(1);
             }
         }
+
         .ai-color-preview {
             display: inline-block;
             padding: 0 4px;
@@ -550,6 +632,7 @@
             white-space: nowrap;
             margin: 0 2px;
         }
+
         @media (max-width: 768px) {
             .ai-chat-header {
                 gap: 5px;
@@ -567,18 +650,19 @@
                 width: 16px;
                 height: 16px;
             }
-             .ai-chat-input-container {
-                width: calc(100% - 20px); /* Adjust container width */
-                padding: 12px 10px; /* Adjust container padding */
-             }
-            .ai-chat-input {
-                padding-right: 50px; /* Adjust padding-right for button */
+            .ai-chat-input-container {
+                width: calc(100% - 20px);
+                padding: 12px 10px;
             }
-             .ai-send-button, .ai-stop-button {
-                right: 20px; /* Adjust button position */
-                bottom: 20px; /* Adjust button position */
-             }
+            .ai-chat-input {
+                padding-right: 50px;
+            }
+            .ai-send-button, .ai-stop-button {
+                right: 20px;
+                bottom: 20px;
+            }
         }
+
         @media (max-width: 600px) {
             .ai-chat-panel {
                 top: 5px;
@@ -615,13 +699,12 @@
                 bottom: -20px;
             }
             .ai-chat-input-container {
-                padding: 8px 10px; /* Adjust container padding */
-                /* gap: 8px; Removed gap */
-                width: calc(100% - 20px); /* Ensure container width calculation is correct */
+                padding: 8px 10px;
+                width: calc(100% - 20px);
                 min-width: auto;
             }
             .ai-chat-input {
-                padding: 8px 50px 8px 10px; /* Adjusted padding-right for button */
+                padding: 8px 50px 8px 10px;
                 min-height: 38px;
                 font-size: 12px;
             }
@@ -629,8 +712,8 @@
                 width: 38px;
                 height: 38px;
                 min-width: 38px;
-                 right: 15px; /* Adjust button position */
-                 bottom: 13px; /* Adjust button position */
+                right: 15px;
+                bottom: 13px;
             }
             .ai-send-button svg, .ai-stop-button svg {
                 width: 18px;
@@ -638,14 +721,12 @@
             }
         }
     </style>
-
 </head>
 <body>
     <div class="ai-chat-panel" id="chatPanel" role="region" aria-label="AI Chat Panel">
         <div class="ai-chat-header">
             <div class="ai-header-controls">
-                 <select id="modelSelect" class="ai-model-select" aria-label="Select AI Model">
-                    <!-- Premier Models (Ücretli) -->
+                <select id="modelSelect" class="ai-model-select" aria-label="Select AI Model">
                     <option value="mistral:codestral-latest">Codestral (256k token, Kod Odaklı)</option>
                     <option value="mistral:mistral-large-latest">Mistral Large (128k token, Yüksek Karmaşıklık)</option>
                     <option value="mistral:pixtral-large-latest">Pixtral Large (128k token, Çoklu Modal)</option>
@@ -656,17 +737,11 @@
                     <option value="mistral:mistral-embed">Mistral Embed (8k token, Metin Gömme)</option>
                     <option value="mistral:mistral-moderation-latest">Mistral Moderation (8k token, İçerik Denetimi)</option>
                     <option value="mistral:mistral-ocr-latest">Mistral OCR (25k token, Metin ve Görüntü Çıkarma)</option>
-
-                    <!-- Free Models (Ücretsiz) -->
                     <option value="mistral:mistral-small-latest">Mistral Small (128k token, Küçük Ölçekli)</option>
                     <option value="mistral:pixtral-12b-2409">Pixtral (128k token, Görüntü Anlama)</option>
-
-                    <!-- Research Models (Araştırma) -->
                     <option value="mistral:open-mistral-nemo">Mistral Nemo (128k token, Çok Dilli)</option>
                     <option value="mistral:open-codestral-mamba">Codestral Mamba (256k token, Mamba 2 Tabanlı)</option>
                     <option value="mistral:mathstral">Mathstral (32k token, Matematik Odaklı)</option>
-
-                    <!-- Legacy Models (Eski Sürümler) -->
                     <option value="mistral:open-mistral-7b">Mistral 7B (32k token, İlk Sürüm)</option>
                     <option value="mistral:open-mixtral-8x7b">Mixtral 8x7B (32k token, MoE)</option>
                     <option value="mistral:open-mixtral-8x22b">Mixtral 8x22B (64k token, Gelişmiş MoE)</option>
@@ -717,13 +792,13 @@
             const chatPanel = document.getElementById('chatPanel');
             const chatHeader = document.querySelector('.ai-chat-header');
             const initialChatInputHeight = chatInput.style.height || getComputedStyle(chatInput).minHeight;
-             const initialSystemPromptHeight = systemPrompt.style.height || getComputedStyle(systemPrompt).minHeight;
+            const initialSystemPromptHeight = systemPrompt.style.height || getComputedStyle(systemPrompt).minHeight;
 
             let chatHistory = [];
             let currentAbortController = null;
 
             const API_KEYS = {
-                MISTRAL: 'XlU2AOg8TPrxALMZ8yBz9Xey5Y0wgjX4' // Replace with your actual key or a secure method
+                MISTRAL: 'XlU2AOg8TPrxALMZ8yBz9Xey5Y0wgjX4'
             };
 
             marked.setOptions({
@@ -863,7 +938,7 @@
             function sanitizeHTML(html) {
                 return DOMPurify.sanitize(html, {
                     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 's', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'hr', 'span'],
-                    ALLOWED_ATTR: ['href', 'class', 'style', 'data-id', 'data-raw-text', 'data-raw-ai-content'], // Added data attributes
+                    ALLOWED_ATTR: ['href', 'class', 'style', 'data-id', 'data-raw-text', 'data-raw-ai-content'],
                     FORBID_TAGS: ['script', 'style', 'input', 'button', 'form', 'textarea'],
                     FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onfocus']
                 });
@@ -887,7 +962,7 @@
                     const actionsDiv = document.createElement('div');
                     actionsDiv.className = 'ai-message-actions';
                     if (!isUserMessage) {
-                         actionsDiv.innerHTML = `
+                        actionsDiv.innerHTML = `
                             <button class="ai-action-button copy">Copy</button>
                             <button class="ai-action-button regenerate">Regen</button>
                             <button class="ai-action-button delete">Del</button>
@@ -898,16 +973,16 @@
                             <button class="ai-action-button delete">Del</button>
                         `;
                     }
-                     messageContainer.appendChild(actionsDiv);
+                    messageContainer.appendChild(actionsDiv);
 
                     chatMessages.appendChild(messageContainer);
                 }
 
-                 if (isUserMessage) {
-                    messageDiv.dataset.rawText = content; // Store raw text for editing
-                 } else {
-                    messageDiv.dataset.rawAiContent = content; // Store raw text for copying
-                 }
+                if (isUserMessage) {
+                    messageDiv.dataset.rawText = content;
+                } else {
+                    messageDiv.dataset.rawAiContent = content;
+                }
 
                 const parsedContent = marked.parse(content);
                 messageDiv.innerHTML = sanitizeHTML(parsedContent);
@@ -963,18 +1038,16 @@
                 if (storedModel && Array.from(modelSelect.options).some(option => option.value === storedModel)) {
                     modelSelect.value = storedModel;
                 } else {
-                     // Select default model if stored model is invalid or not present
-                    modelSelect.selectedIndex = 0; 
+                    modelSelect.selectedIndex = 0;
                 }
-                 // Trigger change event to save the default model if it was just set
                 modelSelect.dispatchEvent(new Event('change'));
 
                 if (storedPrompt) {
                     systemPrompt.value = storedPrompt;
-                    adjustSystemPromptHeight(); // Adjust height after loading
+                    adjustSystemPromptHeight();
                 } else {
-                    systemPrompt.value = ''; // Ensure it's empty if no stored prompt
-                     adjustSystemPromptHeight(); // Adjust height for empty state
+                    systemPrompt.value = '';
+                    adjustSystemPromptHeight();
                 }
 
                 if (storedMessages) {
@@ -982,15 +1055,13 @@
                     chatMessages.innerHTML = '';
                     chatHistory.forEach(msg => renderMessageDOM(msg.id, msg.content, msg.isUser, false));
                     if (chatHistory.length > 0) {
-                        // Use a slight delay to ensure rendering is complete before scrolling
                         setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 50);
                     }
                 } else {
-                     chatHistory = []; // Initialize empty history if no stored messages
-                     chatMessages.innerHTML = '';
+                    chatHistory = [];
+                    chatMessages.innerHTML = '';
                 }
 
-                // Add example messages if chat history is empty after loading from storage
                 if (chatHistory.length === 0) {
                     const exampleUserMessage = {
                         id: 'example-user-1',
@@ -999,18 +1070,16 @@
                     };
                     const exampleAiMessage = {
                         id: 'example-ai-1',
-                        content: 'Elbette! İşte basit bir JavaScript "Merhaba Dünya" örneği:\\n\\n```javascript\\nconsole.log(\"Merhaba Dünya!\");\\n```\\n\\nBu kod, tarayıcının konsoluna "Merhaba Dünya!" yazdıracaktır.',
+                        content: '```javascript\nconsole.log("Merhaba Dünya!");\n```',
                         isUser: false
                     };
 
                     chatHistory.push(exampleUserMessage);
                     chatHistory.push(exampleAiMessage);
 
-                    // Render example messages
                     renderMessageDOM(exampleUserMessage.id, exampleUserMessage.content, exampleUserMessage.isUser, false);
                     renderMessageDOM(exampleAiMessage.id, exampleAiMessage.content, exampleAiMessage.isUser, false);
 
-                    // Scroll to the latest message (which will be the AI one)
                     setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 50);
                 }
             }
@@ -1042,14 +1111,12 @@
                         messageContainer.classList.add('ai-message-editing');
                         editTextArea.focus();
                         editTextArea.style.height = 'auto';
-                         // Use computed style for max-height
                         const maxHeight = parseInt(getComputedStyle(editTextArea).maxHeight);
                         editTextArea.style.height = Math.min(editTextArea.scrollHeight, maxHeight) + 'px';
                         editTextArea.style.overflowY = editTextArea.scrollHeight > maxHeight ? 'auto' : 'hidden';
 
                         editTextArea.addEventListener('input', () => {
                             editTextArea.style.height = 'auto';
-                             // Use computed style for max-height
                             const newScrollHeight = editTextArea.scrollHeight;
                             const newMaxHeight = parseInt(getComputedStyle(editTextArea).maxHeight);
                             editTextArea.style.height = Math.min(newScrollHeight, newMaxHeight) + 'px';
@@ -1083,7 +1150,6 @@
                             messageContainer.classList.remove('ai-message-editing');
                             actionsDiv.style.display = '';
 
-                             // Remove messages after the edited one
                             chatHistory = chatHistory.slice(0, messageIndex + 1);
                             let nextSibling = messageContainer.nextElementSibling;
                             while (nextSibling && nextSibling.classList.contains('ai-message-container')) {
@@ -1116,7 +1182,6 @@
                         messageElement.appendChild(editActions);
                     }
                 } else if (target.classList.contains('delete')) {
-                     // Find the container to delete
                     const containerToDelete = target.closest('.ai-message-container');
                     if (!containerToDelete) return;
 
@@ -1124,18 +1189,15 @@
                     const indexToDelete = chatHistory.findIndex(msg => msg.id === idToDelete);
 
                     if (indexToDelete > -1) {
-                         // If deleting a user message, remove all subsequent messages as well
                         if (chatHistory[indexToDelete].isUser) {
-                             chatHistory = chatHistory.slice(0, indexToDelete);
-                             // Remove all DOM elements from the deleted one onwards
-                             let nextSibling = containerToDelete;
-                             while(nextSibling) {
-                                 const toRemove = nextSibling;
-                                 nextSibling = nextSibling.nextElementSibling;
-                                 toRemove.remove();
-                             }
+                            chatHistory = chatHistory.slice(0, indexToDelete);
+                            let nextSibling = containerToDelete;
+                            while (nextSibling) {
+                                const toRemove = nextSibling;
+                                nextSibling = nextSibling.nextElementSibling;
+                                toRemove.remove();
+                            }
                         } else {
-                             // If deleting an AI message, just remove that message
                             chatHistory.splice(indexToDelete, 1);
                             containerToDelete.remove();
                         }
@@ -1164,7 +1226,6 @@
                     });
                 } else if (target.classList.contains('regenerate')) {
                     let userMessageIndex = -1;
-                     // Find the closest preceding user message
                     for (let i = messageIndex - 1; i >= 0; i--) {
                         if (chatHistory[i].isUser) {
                             userMessageIndex = i;
@@ -1174,20 +1235,18 @@
 
                     if (userMessageIndex !== -1) {
                         const userMessage = chatHistory[userMessageIndex];
-                         // Truncate history from the user message that is being regenerated from
                         chatHistory = chatHistory.slice(0, userMessageIndex + 1);
-                         // Remove all DOM elements from the user message container onwards
                         let startNode = chatMessages.querySelector(`.ai-message-container[data-id="${userMessage.id}"]`);
                         let nextSibling = startNode ? startNode.nextElementSibling : chatMessages.firstElementChild;
 
-                         while(nextSibling) {
+                        while (nextSibling) {
                             const toRemove = nextSibling;
                             nextSibling = nextSibling.nextElementSibling;
                             toRemove.remove();
                         }
                         saveStateToStorage();
 
-                        fetchAiResponse(userMessage.content, userMessage.id); // Pass the original user message content and ID
+                        fetchAiResponse(userMessage.content, userMessage.id);
                     } else {
                         console.error("Could not find the preceding user message to regenerate from.");
                         const originalText = target.textContent;
@@ -1203,7 +1262,6 @@
                 const currentSystemPrompt = systemPrompt.value.trim();
 
                 let apiKey;
-                // Basic API key handling - In a real app, use a secure backend!
                 if (apiType === 'mistral') {
                     apiKey = API_KEYS.MISTRAL;
                 } else {
@@ -1213,7 +1271,7 @@
                 }
 
                 if (!apiKey) {
-                    addNewMessage(`Error: API Key for ${apiType.toUpperCase()} not available. Please configure it.`, false); // Improved error message
+                    addNewMessage(`Error: API Key for ${apiType.toUpperCase()} not available. Please configure it.`, false);
                     return;
                 }
 
@@ -1221,19 +1279,15 @@
                 currentAbortController = new AbortController();
 
                 const aiMessageId = generateId();
-                 // Add a placeholder AI message to the history immediately
                 const userMessageIndex = chatHistory.findIndex(msg => msg.id === userMessageId);
                 const aiMessage = { id: aiMessageId, content: '', isUser: false };
 
-                 if (userMessageIndex !== -1) {
-                    // Insert after the user message
-                     chatHistory.splice(userMessageIndex + 1, 0, aiMessage);
-                 } else {
-                     // Or add to the end if user message not found (shouldn't happen with correct logic)
-                     chatHistory.push(aiMessage);
-                 }
+                if (userMessageIndex !== -1) {
+                    chatHistory.splice(userMessageIndex + 1, 0, aiMessage);
+                } else {
+                    chatHistory.push(aiMessage);
+                }
 
-                 // Render the initial empty AI message with streaming cursor
                 renderMessageDOM(aiMessageId, '', false, true);
 
                 try {
@@ -1249,20 +1303,16 @@
                         if (currentSystemPrompt) {
                             historyForApi.push({ role: 'system', content: currentSystemPrompt });
                         }
-                         // Include all previous messages up to the current user message for context
                         const startIndex = chatHistory.findIndex(msg => msg.id === userMessageId);
-                        if(startIndex !== -1) {
-                             chatHistory.slice(0, startIndex + 1).forEach(msg => {
-                                 // Only include user and assistant roles for the API
-                                 if(msg.isUser || (!msg.isUser && msg.content !== '')) {
+                        if (startIndex !== -1) {
+                            chatHistory.slice(0, startIndex + 1).forEach(msg => {
+                                if (msg.isUser || (!msg.isUser && msg.content !== '')) {
                                     historyForApi.push({ role: msg.isUser ? 'user' : 'assistant', content: msg.content });
-                                 }
-                             });
+                                }
+                            });
                         } else {
-                             // Fallback: just send the current user message if history lookup fails
-                             historyForApi.push({ role: 'user', content: userMessageContent });
+                            historyForApi.push({ role: 'user', content: userMessageContent });
                         }
-
 
                         body = JSON.stringify({
                             model: modelName,
@@ -1270,9 +1320,7 @@
                             stream: true,
                             max_tokens: 32768
                         });
-                        
                     }
-                    // Add other API types here (e.g., if apiType === 'openai')
 
                     response = await fetch(url, {
                         method: 'POST',
@@ -1283,7 +1331,6 @@
 
                     if (!response.ok) {
                         const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                         // Use a more informative error message from the API if available
                         const errorMessage = errorData.error?.message || errorData.message || `API Error (${response.status})`;
                         throw new Error(errorMessage);
                     }
@@ -1313,21 +1360,19 @@
                                         const chunkJson = JSON.parse(dataContent);
                                         const chunkText = chunkJson.choices?.[0]?.delta?.content || '';
                                         if (chunkText) {
-                                            updateAiMessage(aiMessageId, chunkText, false); // isFinal = false for streaming
+                                            updateAiMessage(aiMessageId, chunkText, false);
                                         }
                                     } catch (e) {
                                         console.error("Failed to parse Mistral chunk:", dataContent, e);
                                     }
                                 } else {
-                                     console.warn("Received unexpected line format:", line);
+                                    console.warn("Received unexpected line format:", line);
                                 }
                             }
                         }
-                        // Add other API type streaming parsers here
                     }
 
-                     // Final update to remove the streaming cursor and save state
-                    updateAiMessage(aiMessageId, '', true); // isFinal = true
+                    updateAiMessage(aiMessageId, '', true);
 
                 } catch (error) {
                     console.error("API Fetch Error:", error);
@@ -1338,47 +1383,40 @@
                         console.log("Request aborted by user.");
                         if (msgIndex > -1) {
                             chatHistory[msgIndex].content += " (Stopped)";
-                             // Ensure cursor is removed and state saved on stop
                             renderMessageDOM(aiMessageId, chatHistory[msgIndex].content, false, false);
                             saveStateToStorage();
                         } else {
-                             // If message wasn't even added to history yet, add a stop message
                             addNewMessage("Response generation stopped.", false);
                         }
                     } else {
                         if (msgIndex > -1) {
                             chatHistory[msgIndex].content = errorMsg;
-                             // Ensure cursor is removed and state saved on error
                             renderMessageDOM(aiMessageId, errorMsg, false, false);
                             saveStateToStorage();
                         } else {
-                             // If message wasn't even added to history yet, add an error message
                             addNewMessage(errorMsg, false);
                         }
                     }
                 } finally {
                     hideStopButton();
                     currentAbortController = null;
-                     // Re-enable send button based on input value
-                     sendMessageButton.disabled = chatInput.value.trim() === '';
+                    sendMessageButton.disabled = chatInput.value.trim() === '';
                 }
             }
 
             function handleSendMessage() {
                 const text = chatInput.value.trim();
                 if (text) {
-                    const userMessageId = addNewMessage(text, true); // Add user message to history and DOM
+                    const userMessageId = addNewMessage(text, true);
                     chatInput.value = '';
-                    adjustTextareaHeight(); // Reset input height
+                    adjustTextareaHeight();
                     sendMessageButton.disabled = true;
                     chatInput.focus();
-                     // Trigger the AI response fetch
                     fetchAiResponse(text, userMessageId);
                 }
             }
 
-             // Helper to adjust chat input height
-             function adjustTextareaHeight() {
+            function adjustTextareaHeight() {
                 chatInput.style.height = 'auto';
                 const scrollHeight = chatInput.scrollHeight;
                 const maxHeight = parseInt(getComputedStyle(chatInput).maxHeight);
@@ -1395,12 +1433,10 @@
                     chatInput.style.height = initialChatInputHeight;
                     chatInput.style.overflowY = 'hidden';
                 }
-                 // Update send button state after adjusting height/clearing input
                 sendMessageButton.disabled = chatInput.value.trim() === '' || stopButton.style.display === 'flex';
-             }
+            }
 
-             // Helper to adjust system prompt height
-             function adjustSystemPromptHeight() {
+            function adjustSystemPromptHeight() {
                 systemPrompt.style.height = 'auto';
                 const scrollHeight = systemPrompt.scrollHeight;
                 const maxHeight = parseInt(getComputedStyle(systemPrompt).maxHeight);
@@ -1417,7 +1453,7 @@
                     systemPrompt.style.height = initialSystemPromptHeight;
                     systemPrompt.style.overflowY = 'hidden';
                 }
-             }
+            }
 
             sendMessageButton.addEventListener('click', handleSendMessage);
 
@@ -1430,7 +1466,7 @@
                 }
             });
 
-            chatInput.addEventListener('input', adjustTextareaHeight); // Use the helper
+            chatInput.addEventListener('input', adjustTextareaHeight);
 
             clearChatButton.addEventListener('click', () => {
                 if (confirm('Are you sure you want to delete all messages? This cannot be undone.')) {
@@ -1443,7 +1479,7 @@
             modelSelect.addEventListener('change', saveStateToStorage);
             systemPrompt.addEventListener('input', () => {
                 saveStateToStorage();
-                adjustSystemPromptHeight(); // Adjust height on input
+                adjustSystemPromptHeight();
             });
 
             stopButton.addEventListener('click', () => {
@@ -1456,12 +1492,12 @@
             function showStopButton() {
                 stopButton.style.display = 'flex';
                 sendMessageButton.style.display = 'none';
-                sendMessageButton.disabled = true; // Ensure send button is disabled while stopping
+                sendMessageButton.disabled = true;
             }
+
             function hideStopButton() {
                 stopButton.style.display = 'none';
                 sendMessageButton.style.display = 'flex';
-                 // Re-evaluate send button disabled state based on input value
                 sendMessageButton.disabled = chatInput.value.trim() === '';
             }
 
@@ -1469,7 +1505,6 @@
             chatPanel.addEventListener('mousemove', (e) => {
                 const rect = chatPanel.getBoundingClientRect();
                 const headerHeight = chatHeader.offsetHeight;
-                // Show header if mouse is near the top, hide after a delay otherwise
                 if (e.clientY - rect.top < headerHeight + 10) {
                     chatHeader.style.opacity = '1';
                     clearTimeout(headerTimeout);
@@ -1477,18 +1512,16 @@
                         if (e.clientY - rect.top >= headerHeight + 10) {
                             chatHeader.style.opacity = '0';
                         }
-                    }, 1000); // Stay visible for 1 second after mouse enters the sensitive area
+                    }, 1000);
                 } else {
-                     // If mouse leaves the sensitive area, hide header after a short delay
                     clearTimeout(headerTimeout);
                     headerTimeout = setTimeout(() => {
                         chatHeader.style.opacity = '0';
-                    }, 300); // Hide after 0.3 seconds outside the sensitive area
+                    }, 300);
                 }
             });
 
             chatPanel.addEventListener('mouseleave', () => {
-                 // Always hide header after a short delay when mouse leaves the panel
                 clearTimeout(headerTimeout);
                 headerTimeout = setTimeout(() => {
                     chatHeader.style.opacity = '0';
@@ -1496,13 +1529,9 @@
             });
 
             loadStateFromStorage();
-             // Initial state check for send button
             sendMessageButton.disabled = chatInput.value.trim() === '' || stopButton.style.display === 'flex';
-             // Adjust height on load
             adjustTextareaHeight();
             adjustSystemPromptHeight();
-
-             // Add DOMPurify.sanitize to be globally available if needed elsewhere
             window.DOMPurify = DOMPurify;
         });
     </script>
