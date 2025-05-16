@@ -230,15 +230,15 @@
 
         .ai-send-button, .ai-stop-button {
             position: absolute;
-            bottom: 20px;
-            right: 45px;
+            bottom: 25px;
+            right: 55px;
             background-color: var(--bg-quaternary);
             color: var(--text-primary);
             border: 1px solid var(--bg-quaternary);
             border-radius: 6px;
-            width: 42px;
-            height: 42px;
-            min-width: 42px;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -248,7 +248,6 @@
         }
 
         .ai-send-button:hover:not(:disabled), .ai-stop-button:hover {
-            background-color: #40444b;
             border-color: var(--border-tertiary);
         }
 
@@ -323,7 +322,7 @@
         .ai-user-message .ai-chat-message {
             background-color: #c0c0c0;
             color: #000000;
-            padding: 10px 14px;
+            padding: 6px 14px; /* Reduced vertical padding */
             border-radius: 6px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
             margin-right: 30px;
@@ -331,10 +330,7 @@
 
         .ai-ai-message .ai-chat-message {
             background-color: transparent;
-            color: #c0c0c0;
-            margin-bottom: 25px;
-            padding: 10px 14px;
-            border-radius: 6px;
+            color: var(--text-primary);
             position: relative;
             margin-left: -30px;
         }
@@ -350,7 +346,7 @@
         }
 
         @keyframes ai-blink {
-            0%, 100% { opacity: 1; }
+            0%, 100% { opacity: 0; }
             50% { opacity: 0; }
         }
 
@@ -439,8 +435,8 @@
 
         .ai-message-actions {
             position: absolute;
-            bottom: 6px;
-            right: 5px;
+            bottom: -20px;
+            right: 30px;
             display: inline-block;
             gap: 6px;
             opacity: 0;
@@ -449,6 +445,8 @@
             padding: 0;
             margin-top: 0;
             z-index: 5;
+            display: flex;
+            align-items: center;
         }
 
         .ai-message-container:hover .ai-message-actions,
@@ -487,21 +485,39 @@
 
         .ai-message-editing textarea {
             width: 100%;
-            background-color: #40444b;
-            color: var(--text-primary);
+            min-width: 40ch;
+            background-color: #2f3136;
+            color: #dcddde;
             font-size: 13px;
-            border: 1px solid var(--border-tertiary);
-            box-shadow: none;
+            border: 1px solid #202225;
             outline: none;
             padding: 8px 12px;
             border-radius: 5px;
             box-sizing: border-box;
-            resize: vertical;
+            resize: none;
             min-height: 35px;
-            max-height: 400px;
+            max-height: 560px; /* 20 satır, ~28px/satır */
             line-height: 1.4;
             margin-bottom: 8px;
             overflow-y: auto;
+        }
+
+        .ai-message-editing textarea:focus {
+            border-color: #202225;
+            box-shadow: none;
+        }
+
+        .ai-message-editing textarea::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .ai-message-editing textarea::-webkit-scrollbar-track {
+            background: #2f3136;
+        }
+
+        .ai-message-editing textarea::-webkit-scrollbar-thumb {
+            background-color: #202225;
+            border-radius: 3px;
         }
 
         .ai-chat-message h1, .ai-chat-message h2, .ai-chat-message h3,
@@ -695,7 +711,7 @@
                 margin-bottom: 25px;
             }
             .ai-message-actions {
-                right: 10px;
+                right: 20px;
                 bottom: -20px;
             }
             .ai-chat-input-container {
@@ -963,12 +979,14 @@
                     actionsDiv.className = 'ai-message-actions';
                     if (!isUserMessage) {
                         actionsDiv.innerHTML = `
-                            <button class="ai-action-button copy">Copy</button>
                             <button class="ai-action-button regenerate">Regen</button>
+                            <button class="ai-action-button copy">Copy</button>
+                            <button class="ai-action-button edit">Edit</button>
                             <button class="ai-action-button delete">Del</button>
                         `;
                     } else {
                         actionsDiv.innerHTML = `
+                            <button class="ai-action-button copy">Copy</button>
                             <button class="ai-action-button edit">Edit</button>
                             <button class="ai-action-button delete">Del</button>
                         `;
@@ -1096,17 +1114,18 @@
                 const messageIndex = chatHistory.findIndex(msg => msg.id === messageId);
                 const currentMessage = chatHistory[messageIndex];
 
-                if (target.classList.contains('edit') && messageContainer.classList.contains('ai-user-message')) {
+                if (target.classList.contains('edit')) { // Modified to allow editing both user and AI messages
                     if (!messageContainer.classList.contains('ai-message-editing')) {
                         const actionsDiv = messageContainer.querySelector('.ai-message-actions');
                         actionsDiv.style.display = 'none';
 
                         const originalContentHTML = messageElement.innerHTML;
-                        const rawText = messageElement.dataset.rawText || currentMessage?.content || '';
+                        // Get raw content based on message type
+                        const rawContent = currentMessage?.isUser ? (messageElement.dataset.rawText || currentMessage?.content || '') : (messageElement.dataset.rawAiContent || currentMessage?.content || '');
 
                         messageElement.innerHTML = '';
                         const editTextArea = document.createElement('textarea');
-                        editTextArea.value = rawText;
+                        editTextArea.value = rawContent;
                         messageElement.appendChild(editTextArea);
                         messageContainer.classList.add('ai-message-editing');
                         editTextArea.focus();
@@ -1129,50 +1148,41 @@
                         editActions.style.gap = '8px';
 
                         const saveButton = document.createElement('button');
-                        saveButton.textContent = 'Save & Resend';
+                        saveButton.textContent = currentMessage?.isUser ? 'Save & Resend' : 'Save'; // Change button text for AI messages
                         saveButton.className = 'ai-action-button';
                         saveButton.onclick = () => {
-                            const newText = editTextArea.value;
+                            const newContent = editTextArea.value;
                             if (messageIndex > -1) {
-                                chatHistory[messageIndex].content = newText;
+                                chatHistory[messageIndex].content = newContent;
                                 saveStateToStorage();
                             }
 
-                            messageElement.innerHTML = sanitizeHTML(marked.parse(newText));
-                            highlightColorsInElement(messageElement);
-                            messageElement.querySelectorAll('pre').forEach(pre => {
-                                if (pre.querySelector('code')) {
-                                    hljs.highlightElement(pre.querySelector('code'));
-                                }
-                                addCopyButtonToPre(pre);
-                            });
+                            // Re-render the message with updated content
+                            renderMessageDOM(messageId, newContent, currentMessage.isUser, false);
 
                             messageContainer.classList.remove('ai-message-editing');
                             actionsDiv.style.display = '';
 
-                            chatHistory = chatHistory.slice(0, messageIndex + 1);
-                            let nextSibling = messageContainer.nextElementSibling;
-                            while (nextSibling && nextSibling.classList.contains('ai-message-container')) {
-                                const toRemove = nextSibling;
-                                nextSibling = nextSibling.nextElementSibling;
-                                toRemove.remove();
-                            }
-                            saveStateToStorage();
-
-                            fetchAiResponse(newText, messageId);
+                            if (currentMessage.isUser) {
+                                // If user message, slice history and resend
+                                chatHistory = chatHistory.slice(0, messageIndex + 1);
+                                let nextSibling = messageContainer.nextElementSibling;
+                                while (nextSibling && nextSibling.classList.contains('ai-message-container')) {
+                                    const toRemove = nextSibling;
+                                    nextSibling = nextSibling.nextElementSibling;
+                                    toRemove.remove();
+                                }
+                                saveStateToStorage();
+                                fetchAiResponse(newContent, messageId);
+                            } // If AI message, just save and update display (already done above)
                         };
 
                         const cancelButton = document.createElement('button');
                         cancelButton.textContent = 'Cancel';
                         cancelButton.className = 'ai-action-button';
                         cancelButton.onclick = () => {
-                            messageElement.innerHTML = originalContentHTML;
-                            messageElement.querySelectorAll('pre').forEach(pre => {
-                                if (pre.querySelector('code')) {
-                                    hljs.highlightElement(pre.querySelector('code'));
-                                }
-                                addCopyButtonToPre(pre);
-                            });
+                             // Re-render with original content to cancel edit
+                            renderMessageDOM(messageId, currentMessage.content, currentMessage.isUser, false);
                             messageContainer.classList.remove('ai-message-editing');
                             actionsDiv.style.display = '';
                         };
@@ -1203,27 +1213,35 @@
                         }
                         saveStateToStorage();
                     }
-                } else if (target.classList.contains('copy') && messageContainer.classList.contains('ai-ai-message')) {
-                    const rawAiContent = messageElement.dataset.rawAiContent || currentMessage?.content || '';
-                    navigator.clipboard.writeText(rawAiContent).then(() => {
-                        target.textContent = 'Copied!';
-                        target.classList.add('copied-effect');
-                        target.disabled = true;
-                        setTimeout(() => {
-                            target.textContent = 'Copy';
-                            target.classList.remove('copied-effect');
-                            target.disabled = false;
-                        }, 1500);
-                    }).catch(err => {
-                        console.error('Copy AI message failed', err);
-                        const originalText = target.textContent;
-                        target.textContent = 'Error';
-                        target.disabled = true;
-                        setTimeout(() => {
-                            target.textContent = originalText;
-                            target.disabled = false;
-                        }, 1500);
-                    });
+                } else if (target.classList.contains('copy')) { // Modified to handle both user and AI messages
+                    let contentToCopy;
+                    if (messageContainer.classList.contains('ai-user-message')) {
+                        contentToCopy = messageElement.dataset.rawText || currentMessage?.content || '';
+                    } else { // ai-ai-message
+                        contentToCopy = messageElement.dataset.rawAiContent || currentMessage?.content || '';
+                    }
+
+                    if (contentToCopy) {
+                        navigator.clipboard.writeText(contentToCopy).then(() => {
+                            target.textContent = 'Copied!';
+                            target.classList.add('copied-effect');
+                            target.disabled = true;
+                            setTimeout(() => {
+                                target.textContent = 'Copy';
+                                target.classList.remove('copied-effect');
+                                target.disabled = false;
+                            }, 1500);
+                        }).catch(err => {
+                            console.error('Copy message failed', err);
+                            const originalText = target.textContent;
+                            target.textContent = 'Error';
+                            target.disabled = true;
+                            setTimeout(() => {
+                                target.textContent = originalText;
+                                target.disabled = false;
+                            }, 1500);
+                        });
+                    }
                 } else if (target.classList.contains('regenerate')) {
                     let userMessageIndex = -1;
                     for (let i = messageIndex - 1; i >= 0; i--) {
